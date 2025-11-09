@@ -1,0 +1,15 @@
+[
+  {
+    "id": "gwima",
+    "name": "Gwima",
+    "type": "ENEMY",
+    "maxHP": 160,
+    "atk": 35,
+    "def": 25,
+    "wil": 70,
+    "res": 60,
+    "armored": false,
+    "actions": ["reverse_slash", "precision_shot"],
+    "weapon": "pistol_standard"
+  }
+]

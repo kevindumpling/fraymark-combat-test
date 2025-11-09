@@ -1,0 +1,16 @@
+[
+  {
+    "id": "burn",
+    "type": "BURN",
+    "magnitude": 15,
+    "duration": 3,
+    "description": "Deals burn damage over time."
+  },
+  {
+    "id": "res_down",
+    "type": "RES_DOWN",
+    "magnitude": 10,
+    "duration": 2,
+    "description": "Reduces resistance temporarily."
+  }
+]
