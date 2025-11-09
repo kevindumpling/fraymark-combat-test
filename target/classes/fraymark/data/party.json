@@ -1,0 +1,28 @@
+[
+  {
+    "id": "sam",
+    "name": "Sam",
+    "type": "PLAYER",
+    "maxHP": 200,
+    "atk": 50,
+    "def": 40,
+    "wil": 55,
+    "res": 35,
+    "armored": false,
+    "actions": ["alpha_burst", "quick_lunge"],
+    "weapon": "knife_basic"
+  },
+  {
+    "id": "luna",
+    "name": "Luna",
+    "type": "PLAYER",
+    "maxHP": 160,
+    "atk": 35,
+    "def": 25,
+    "wil": 70,
+    "res": 60,
+    "armored": false,
+    "actions": ["theta_guard", "punch"],
+    "weapon": "pistol_standard"
+  }
+]

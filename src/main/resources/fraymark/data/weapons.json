@@ -1,0 +1,16 @@
+[
+  {
+    "id": "knife_basic",
+    "name": "Combat Knife",
+    "type": "WEAPON",
+    "weapon_class": "BLADED_LIGHT",
+    "actions": ["slash", "stab"]
+  },
+  {
+    "id": "pistol_standard",
+    "name": "9mm Pistol",
+    "type": "WEAPON",
+    "weapon_class": "RANGED_FIREARM_LIGHT",
+    "actions": ["quick_shot", "precision_shot"]
+  }
+]

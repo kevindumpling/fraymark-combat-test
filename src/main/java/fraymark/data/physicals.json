@@ -1,0 +1,20 @@
+[
+  {
+    "id": "punch",
+    "type":"PHYSICAL_BASIC",
+    "name": "Punch",
+    "power": 60,
+    "trpCost": 0,
+    "effects":  [],
+    "description": "A punch."
+  },
+  {
+    "id": "quick_lunge",
+    "type":"PHYSICAL_BASIC",
+    "name": "Quick Lunge",
+    "power": 60,
+    "trpCost": 0,
+    "effects":  [],
+    "description": "A lunge."
+  }
+]
