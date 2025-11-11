@@ -17,10 +17,14 @@ public class BasicPhysicalAction implements Action {
     private final String name;
     private final int power;
     protected final List<EffectDescriptor> effectBundle = new ArrayList<>();
+    private final String flavorOnUse;
+    private final int trpGain;
 
-    public BasicPhysicalAction(String name, int power) {
+    public BasicPhysicalAction(String name, int power, int trpGain, String flavorOnUse) {
         this.name = name;
         this.power = power;
+        this.flavorOnUse  = flavorOnUse;
+        this.trpGain = trpGain;
     }
 
     @Override public String getName() { return name; }
@@ -33,10 +37,18 @@ public class BasicPhysicalAction implements Action {
     @Override
     public ActionResult execute(ActionContext context) {
         Combatant user = context.user();
-        Combatant target = context.targets().get(0);  // TODO: for now this just hits the first enemy
+        Combatant target = context.targets().get(0);
         List<CombatEvent> events = new ArrayList<>();
 
-        events.add(CombatEvent.damageEvent(user, target, this.power, getName()));
+        events.add(CombatEvent.damageEvent(user, target, this.power, "\n" + user.getName() + " used " + getName()));
+        user.getResources().setTrp(user.getResources().getTrp() + this.trpGain);
+
+        // Add on-use flavor line (if provided)
+        if (flavorOnUse != null && !flavorOnUse.isBlank()) {
+            events.add(CombatEvent.logEvent(
+                    user, target, flavorOnUse
+            ));
+        }
 
         // Apply all attached effects.
         for (EffectDescriptor desc : effectBundle) {
@@ -44,9 +56,17 @@ public class BasicPhysicalAction implements Action {
             effect.onApply(target);
             target.addStatus(effect);
             events.add(CombatEvent.logEvent(
-                    user, target, target.getName() + " affected by " + effect.getName()));
+                    user, target, target.getName() + "was affected by " + effect.getName() + "!"));
         }
+
+
 
         return new ActionResult(events);
     }
+
+    public void addEffectDescriptor(EffectDescriptor d) { this.effectBundle.add(d); }
+
+    public String getFlavorOnUse() { return flavorOnUse; }
+
+
 }

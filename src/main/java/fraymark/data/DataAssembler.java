@@ -13,10 +13,9 @@ import java.util.*;
  * JSON → Maps → Factories → Live Model Objects
  */
 public class DataAssembler {
-
-    private final ActionBuilder actionBuilder = new ActionBuilder();
-    private final WeaponFactory weaponFactory = new WeaponFactory();
     private final EffectFactory effectFactory = new EffectFactory();
+    private final ActionBuilder actionBuilder = new ActionBuilder(effectFactory);
+    private final WeaponFactory weaponFactory = new WeaponFactory();
     private final CharacterFactory characterFactory = new CharacterFactory();
 
     private final Map<String, Action> actionRegistry = new HashMap<>();
@@ -43,7 +42,7 @@ public class DataAssembler {
         var weaponsData  = DataLoader.loadWeaponsRaw();
 
         // Register effects
-        effectFactory.loadFromData(effectsData);
+        effectFactory.loadFromTypeDefs(effectsData);
 
         System.out.println("DEBUG: Physicals raw: " + physicalsData.size() + " entries");
         if (!physicalsData.isEmpty()) {

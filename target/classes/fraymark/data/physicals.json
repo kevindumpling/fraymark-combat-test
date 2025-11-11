@@ -13,8 +13,18 @@
     "type":"PHYSICAL_BASIC",
     "name": "Quick Lunge",
     "power": 60,
-    "trpCost": 0,
+    "trpCost": 2,
     "effects":  [],
     "description": "A lunge."
+  },
+  {
+    "id": "reverse_slash",
+    "type":"PHYSICAL_BASIC",
+    "name": "Reverse Slash",
+    "power": 60,
+    "trpCost": 2,
+    "effects":  [],
+    "description": "A slash.",
+    "flavorOnUse": "A Gwima Blast appeared!"
   }
 ]

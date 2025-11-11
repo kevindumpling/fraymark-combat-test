@@ -30,7 +30,7 @@ public class CombatEvent {
     public void cancel() { this.canceled = true; }
 
     public static CombatEvent damageEvent(Combatant s, Combatant t, double dmg, String label) {
-        return new CombatEvent(CombatEventType.DAMAGE, s, t, dmg, s.getName() + " uses " + label + " on " + t.getName());
+        return new CombatEvent(CombatEventType.DAMAGE, s, t, dmg, label + " on " + t.getName() + "!");
     }
 
     public static CombatEvent logEvent(Combatant s, Combatant t, String msg) {

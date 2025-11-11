@@ -27,14 +27,9 @@ public class ApplyDamageHandler implements DamageHandler {
 
         if (ctx.bus() != null) {
             String msg = String.format(
-                    "%s uses %s on %s! (%s took %d damage!) [%dHP -> %dHP]",
-                    source.getName(),
-                    ctx.action() != null ? ctx.action().getName() : "Unknown Attack",
+                    "(%s took %d damage!)",
                     target.getName(),
-                    target.getName(),
-                    (int) amount,
-                    oldHp,
-                    newHp
+                    (int) amount
             );
 
             ctx.bus().publish(new CombatEvent(
