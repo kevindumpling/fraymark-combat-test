@@ -1,6 +1,9 @@
 package fraymark.combat.engine;
 
 import fraymark.model.combatants.Combatant;
+import fraymark.model.position.Formation;
+import fraymark.model.position.Lineup;
+
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -16,11 +19,20 @@ public class BattleState {
     private int roundNumber = 1;
     private TurnPhase currentPhase = TurnPhase.PLAYER_TURN;
 
+    private Formation partyFormation = Formation.KNOT;
+    private Formation enemyFormation = Formation.KNOT;
+    private Lineup partyLineup, enemyLineup;
+
     public BattleState(List<Combatant> party, List<Combatant> enemies) {
         this.party = party;
         this.enemies = enemies;
         this.turnOrder = new ArrayList<>();
         initializeTurnOrder();
+
+        this.partyLineup = new Lineup(party, partyFormation);
+        this.enemyLineup = new Lineup(enemies, enemyFormation);
+
+
     }
 
     /**
@@ -102,6 +114,11 @@ public class BattleState {
                 " / " + turnOrder.size());
     }
 
+    public void initLineups() {
+        this.partyLineup = new Lineup(party, partyFormation);
+        this.enemyLineup = new Lineup(enemies, enemyFormation);
+    }
+
     /**
      * Start a new round (refresh turn order, increment round counter).
      */
@@ -148,6 +165,13 @@ public class BattleState {
     public int getRoundNumber() { return roundNumber; }
     public TurnPhase getPhase() { return currentPhase; }
     public void setPhase(TurnPhase phase) { this.currentPhase = phase; }
+
+    public Lineup getPartyLineup() { return partyLineup; }
+    public Lineup getEnemyLineup() { return enemyLineup; }
+    public Formation getPartyFormation() { return partyFormation; }
+    public Formation getEnemyFormation() { return enemyFormation; }
+    public void setPartyFormation(Formation f) { partyFormation = f; initLineups(); }
+    public void setEnemyFormation(Formation f) { enemyFormation = f; initLineups(); }
 
     /**
      * Battle result enum.

@@ -24,17 +24,19 @@ public class ActionBuilder {
         int power = ((Number) data.getOrDefault("power", 0)).intValue();
         int trpCost = ((Number) data.getOrDefault("trpCost", 0)).intValue();
         String flavorOnUse = (String) data.getOrDefault("flavorOnUse", "");
+        String targeting = (String) data.getOrDefault("targeting", "SINGLE");
+        String rangeKind = (String) data.getOrDefault("rangeKind", "ALL");
 
         System.out.println("Building action: " + data.get("id") + " (" + type + ")");
 
         // 1) Construct the action instance
         Action action = switch (type.toUpperCase(Locale.ROOT)) {
-            case "PHYSICAL_BASIC", "WEAPON" -> new BasicPhysicalAction(name, power, trpCost, flavorOnUse);
-            case "WEAVE" -> new WeaveAction(name, power, trpCost, flavorOnUse);
+            case "PHYSICAL_BASIC", "WEAPON" -> new BasicPhysicalAction(name, power, trpCost, flavorOnUse,  TargetingMode.valueOf(targeting), AttackRangeKind.valueOf(rangeKind));
+            case "WEAVE" -> new WeaveAction(name, power, trpCost, flavorOnUse, TargetingMode.valueOf(targeting), AttackRangeKind.valueOf(rangeKind));
             default -> throw new IllegalArgumentException("Unknown action type: " + type);
         };
 
-        // 2) Parse optional effects: a list of objects like
+        // Parse optional effects: a list of objects like
         //    { "type": "BLEED", "magnitude": 6, "duration": 2, "name": "Frostbite" }
         Object rawEffects = data.get("effects");
         if (rawEffects instanceof List<?> list && !list.isEmpty()) {

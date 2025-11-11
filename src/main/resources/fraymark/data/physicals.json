@@ -25,6 +25,8 @@
     "trpCost": 2,
     "effects":  [],
     "description": "A slash.",
+    "targeting": "AOE_TIER",
+    "rangeKind": "ALL",
     "flavorOnUse": "A Gwima Blast appeared!"
   }
 ]

@@ -20,11 +20,17 @@ public class BasicPhysicalAction implements Action {
     private final String flavorOnUse;
     private final int trpGain;
 
-    public BasicPhysicalAction(String name, int power, int trpGain, String flavorOnUse) {
+    private final TargetingMode targeting;
+    private final AttackRangeKind rangeKind;
+
+    public BasicPhysicalAction(String name, int power, int trpGain, String flavorOnUse, TargetingMode targeting, AttackRangeKind rangeKind) {
         this.name = name;
         this.power = power;
         this.flavorOnUse  = flavorOnUse;
         this.trpGain = trpGain;
+
+        this.targeting = targeting;
+        this.rangeKind =  rangeKind;
     }
 
     @Override public String getName() { return name; }
@@ -36,29 +42,34 @@ public class BasicPhysicalAction implements Action {
 
     @Override
     public ActionResult execute(ActionContext context) {
-        Combatant user = context.user();
-        Combatant target = context.targets().get(0);
+        List<Combatant> targets =  context.targets();
         List<CombatEvent> events = new ArrayList<>();
 
-        events.add(CombatEvent.damageEvent(user, target, this.power, "\n" + user.getName() + " used " + getName()));
-        user.getResources().setTrp(user.getResources().getTrp() + this.trpGain);
+        for (Combatant c: targets){
+            Combatant user = context.user();
+            Combatant target = c;
 
-        // Add on-use flavor line (if provided)
-        if (flavorOnUse != null && !flavorOnUse.isBlank()) {
-            events.add(CombatEvent.logEvent(
-                    user, target, flavorOnUse
-            ));
+            events.add(CombatEvent.damageEvent(user, target, this.power, "\n" + user.getName() + " used " + getName()));
+            user.getResources().setTrp(user.getResources().getTrp() + this.trpGain);
+
+            // Add on-use flavor line (if provided)
+            if (flavorOnUse != null && !flavorOnUse.isBlank()) {
+                events.add(CombatEvent.logEvent(
+                        user, target, flavorOnUse
+                ));
+            }
+
+            // Apply all attached effects.
+            for (EffectDescriptor desc : effectBundle) {
+                Effect effect = desc.instantiate(user, target);
+                effect.onApply(target);
+                target.addStatus(effect);
+                events.add(CombatEvent.logEvent(
+                        user, target, target.getName() + "was affected by " + effect.getName() + "!"));
+            }
+
+
         }
-
-        // Apply all attached effects.
-        for (EffectDescriptor desc : effectBundle) {
-            Effect effect = desc.instantiate(user, target);
-            effect.onApply(target);
-            target.addStatus(effect);
-            events.add(CombatEvent.logEvent(
-                    user, target, target.getName() + "was affected by " + effect.getName() + "!"));
-        }
-
 
 
         return new ActionResult(events);
@@ -67,6 +78,9 @@ public class BasicPhysicalAction implements Action {
     public void addEffectDescriptor(EffectDescriptor d) { this.effectBundle.add(d); }
 
     public String getFlavorOnUse() { return flavorOnUse; }
+
+    @Override public TargetingMode getTargeting() { return targeting; }
+    @Override public AttackRangeKind getRangeKind() { return rangeKind; }
 
 
 }

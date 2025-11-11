@@ -17,37 +17,48 @@ public class WeaveAction implements Action {
     protected final String name;
     private final String flavorOnUse;
 
-    public WeaveAction(String name, int power, int trpCost, String flavorOnUse) {
+    private final TargetingMode targeting;
+    private final AttackRangeKind rangeKind;
+
+    public WeaveAction(String name, int power, int trpCost, String flavorOnUse, TargetingMode targeting, AttackRangeKind rangeKind) {
         this.power = power;
         this.name = name;
         this.trpCost = trpCost;
         this.flavorOnUse = flavorOnUse;
+
+        this.targeting = targeting;
+        this.rangeKind = rangeKind;
     }
 
     @Override
     public ActionResult execute(ActionContext context) {
-        Combatant user = context.user();
-        Combatant target = context.targets().get(0);
+        List<Combatant> targets = context.targets();
         List<CombatEvent> events = new ArrayList<>();
 
-        events.add(CombatEvent.damageEvent(user, target, this.power, "\n" + user.getName() + " tried " + getName()));
-        user.getResources().setTrp(user.getResources().getTrp() - this.trpCost);
+        for (Combatant c : targets){
+            Combatant user = context.user();
+            Combatant target = c;
 
-        // Add on-use flavor line (if provided)
-        if (flavorOnUse != null && !flavorOnUse.isBlank()) {
-            events.add(CombatEvent.logEvent(
-                    user, target, flavorOnUse
-            ));
-        }
-        // Apply all attached effects.
-        for (EffectDescriptor desc : effectBundle) {
-            Effect effect = desc.instantiate(user, target);
-            effect.onApply(target);
-            target.addStatus(effect);
-            events.add(CombatEvent.logEvent(
-                    user, target, target.getName() + " was affected by " + effect.getName() + "!"));
-        }
+            events.add(CombatEvent.damageEvent(user, target, this.power, "\n" + user.getName() + " tried " + getName()));
+            user.getResources().setTrp(user.getResources().getTrp() - this.trpCost);
 
+            // Add on-use flavor line (if provided)
+            if (flavorOnUse != null && !flavorOnUse.isBlank()) {
+                events.add(CombatEvent.logEvent(
+                        user, target, flavorOnUse
+                ));
+            }
+            // Apply all attached effects.
+            for (EffectDescriptor desc : effectBundle) {
+                Effect effect = desc.instantiate(user, target);
+                effect.onApply(target);
+                target.addStatus(effect);
+                events.add(CombatEvent.logEvent(
+                        user, target, target.getName() + " was affected by " + effect.getName() + "!"));
+            }
+
+
+        }
 
 
         return new ActionResult(events);
@@ -75,5 +86,7 @@ public class WeaveAction implements Action {
 
     public String getFlavorOnUse() { return flavorOnUse; }
 
+    @Override public TargetingMode getTargeting() { return targeting; }
+    @Override public AttackRangeKind getRangeKind() { return rangeKind; }
 
 }

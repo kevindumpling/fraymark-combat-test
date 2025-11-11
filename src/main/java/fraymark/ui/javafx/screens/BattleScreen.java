@@ -200,8 +200,9 @@ public class BattleScreen extends BorderPane implements EventListener {
         confirm.setOnAction(e -> {
             // safety checks
             if (pendingActor == null || pendingAction == null || selectedTarget == null) return;
+            List<Combatant> finalTargets = TargetingResolver.resolveTargets(state, pendingAction, selectedTarget);
+            engine.performAction(state, pendingActor, pendingAction, finalTargets);
 
-            engine.performAction(state, pendingActor, pendingAction, List.of(selectedTarget));
 
             // End selection mode and proceed
             awaitingTarget = false;
@@ -371,7 +372,11 @@ public class BattleScreen extends BorderPane implements EventListener {
         Action chosenAction = actions.get(random.nextInt(actions.size()));
         Combatant target = aliveParty.get(random.nextInt(aliveParty.size()));
 
-        engine.performAction(state, enemy, chosenAction, List.of(target));
+        List<Combatant> finalTargets =
+                TargetingResolver.resolveTargets(state, chosenAction, target);
+
+        engine.performAction(state, enemy, chosenAction, finalTargets);
+
 
         // Process next turn
         processTurn();

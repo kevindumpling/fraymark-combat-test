@@ -28,6 +28,10 @@ public class BattleEngine {
      */
     public ActionResult performAction(BattleState state, Combatant actor,
                                       Action action, List<Combatant> targets) {
+        if (actor == null) {
+            System.err.println("performAction: actor is null — aborting.");
+            return new ActionResult(List.of());
+        }
 
         // Apply start-of-turn effects
         effects.onTurnStart(List.of(actor));

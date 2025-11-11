@@ -16,4 +16,7 @@ public interface Action {
 
     boolean canUse(Combatant user);
 
+    default TargetingMode getTargeting() { return TargetingMode.SINGLE; }
+    default AttackRangeKind getRangeKind() { return AttackRangeKind.ALL; }
+
 }
