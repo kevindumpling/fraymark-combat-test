@@ -4,12 +4,15 @@ import fraymark.combat.engine.*;
 import fraymark.combat.events.*;
 import fraymark.model.actions.*;
 import fraymark.model.combatants.*;
+import fraymark.model.position.DistanceTier;
 import fraymark.ui.javafx.viewmodel.*;
 import fraymark.ui.javafx.screens.components.*;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 
 import java.util.List;
@@ -29,6 +32,10 @@ public class BattleScreen extends BorderPane implements EventListener {
             "-fx-padding: 6; -fx-background-color: #eee; -fx-background-radius: 6;";
     private static final String SELECTED_STYLE =
             "-fx-padding: 6; -fx-background-color: #ccc; -fx-border-color: #88f; -fx-border-width: 2; -fx-background-radius: 6; -fx-border-radius: 6;";
+    private static final String STYLE_AOE =
+            "-fx-padding: 6; -fx-background-color: #fff; -fx-border-color: #99d; -fx-border-width: 1; -fx-background-radius: 6; -fx-border-radius: 6;";
+    private final Map<Combatant, VBox> rowByCombatant = new HashMap<>();
+    private final Map<Combatant, Circle> dotByCombatant = new HashMap<>();
 
     private final BattleState state;
     private final BattleEngine engine;
@@ -65,105 +72,123 @@ public class BattleScreen extends BorderPane implements EventListener {
 
     /** Build the middle battlefield view (party + enemies). */
     private VBox buildCombatUI() {
-        VBox box = new VBox(15);
-        Text title = new Text("Battlefield");
-        box.getChildren().add(title);
+        VBox root = new VBox(15);
+        root.getChildren().add(new Text("Battlefield"));
 
-        // === Party ===
-        Text partyLabel = new Text("=== YOUR PARTY ===");
-        box.getChildren().add(partyLabel);
+        // Party sections
+        root.getChildren().add(new Text("=== YOUR PARTY ==="));
+        root.getChildren().add(sectionForSide(state.getParty(), true));
 
-        for (Combatant c : state.getParty()) {
-            CombatantViewModel vm = new CombatantViewModel(c);
-            HPBar hp = new HPBar(vm);
-            MGBar mg = new MGBar(vm);
+        root.getChildren().add(new Separator());
 
-            Text partyInfo = new Text();
-            partyInfo.textProperty().bind(
-                    Bindings.format("%s (HP: %d/%d, TRP: %d)",
-                            vm.nameProperty(),
-                            vm.hpProperty().asObject(),
-                            vm.maxHpProperty().asObject(),
-                            vm.trpProperty().asObject()
-                    )
-            );
+        // Enemy sections
+        root.getChildren().add(new Text("=== ENEMIES ==="));
+        root.getChildren().add(sectionForSide(state.getEnemies(), false));
 
-            VBox stats = new VBox(3, hp, mg);
-            VBox partyRow = new VBox(5, partyInfo, stats);
-
-            // style + register for selection
-            partyRow.setStyle(NEUTRAL_STYLE);
-            nodeToCombatant.put(partyRow, c);
-
-            partyRow.setOnMouseClicked(e -> {
-                if (!awaitingTarget) return;
-                onTargetClicked(partyRow, c);
-            });
-            partyRow.setOnMouseEntered(e -> {
-                if (!awaitingTarget) return;
-                if (selectedTarget == null || nodeToCombatant.get(partyRow) != selectedTarget) {
-                    partyRow.setStyle(HOVER_STYLE);
-                }
-            });
-            partyRow.setOnMouseExited(e -> {
-                if (!awaitingTarget) return;
-                if (selectedTarget == null || nodeToCombatant.get(partyRow) != selectedTarget) {
-                    partyRow.setStyle(NEUTRAL_STYLE);
-                }
-            });
-
-            box.getChildren().add(partyRow);
-        }
-        box.getChildren().add(new Separator());
-
-        // === Enemies ===
-        Text enemyLabel = new Text("=== ENEMIES ===");
-        box.getChildren().add(enemyLabel);
-
-        for (Combatant c : state.getEnemies()) {
-            CombatantViewModel vm = new CombatantViewModel(c);
-            HPBar hp = new HPBar(vm);
-
-            Text enemyInfo = new Text();
-            enemyInfo.textProperty().bind(
-                    Bindings.format("Enemy: %s (HP: %d/%d, TRP: %d)",
-                            vm.nameProperty(),
-                            vm.hpProperty().asObject(),
-                            vm.maxHpProperty().asObject(),
-                            vm.trpProperty().asObject()
-                    )
-            );
-
-            VBox enemyRow = new VBox(5, enemyInfo, hp);
-            enemyRow.setStyle(NEUTRAL_STYLE);
-
-            // Hover feedback (only if not selected and we are in selection mode)
-            enemyRow.setOnMouseEntered(e -> {
-                if (!awaitingTarget) return;
-                if (selectedTarget == null || nodeToCombatant.get(enemyRow) != selectedTarget) {
-                    enemyRow.setStyle(HOVER_STYLE);
-                }
-            });
-            enemyRow.setOnMouseExited(e -> {
-                if (!awaitingTarget) return;
-                if (selectedTarget == null || nodeToCombatant.get(enemyRow) != selectedTarget) {
-                    enemyRow.setStyle(NEUTRAL_STYLE);
-                }
-            });
-            // track this row -> combatant for click selection
-            nodeToCombatant.put(enemyRow, c);
-
-            // click handler (only active when awaiting target)
-            enemyRow.setOnMouseClicked(evt -> {
-                if (!awaitingTarget) return;
-                onTargetClicked(enemyRow, c);
-            });
-
-            box.getChildren().add(enemyRow);
-        }
-
-        return box;
+        return root;
     }
+
+    private VBox sectionForSide(List<Combatant> side, boolean isParty) {
+        VBox wrapper = new VBox(10);
+
+        // Close Range
+        wrapper.getChildren().add(new Text("— Close Range —"));
+        VBox closeBox = new VBox(8);
+        wrapper.getChildren().add(closeBox);
+
+        // Behind
+        wrapper.getChildren().add(new Text("— Behind —"));
+        VBox behindBox = new VBox(8);
+        wrapper.getChildren().add(behindBox);
+
+        for (Combatant c : side) {
+            DistanceTier tier = (isParty ? state.getPartyLineup() : state.getEnemyLineup()).tierOf(c);
+            VBox row = buildCombatantRow(c, isParty);
+            if (tier == DistanceTier.CLOSE) closeBox.getChildren().add(row);
+            else behindBox.getChildren().add(row);
+        }
+        return wrapper;
+    }
+
+    private VBox buildCombatantRow(Combatant c, boolean isParty) {
+        CombatantViewModel vm = new CombatantViewModel(c);
+        HPBar hp = new HPBar(vm);
+        MGBar mg = new MGBar(vm);
+
+        Text info = new Text();
+        info.textProperty().bind(
+                Bindings.format("%s (HP: %d/%d, TRP: %d)",
+                        vm.nameProperty(),
+                        vm.hpProperty().asObject(),
+                        vm.maxHpProperty().asObject(),
+                        vm.trpProperty().asObject()
+                )
+        );
+
+        Circle dot = new Circle(8);
+        dot.setFill(isParty ? Color.STEELBLUE : Color.CRIMSON);
+        dot.setStroke(Color.BLACK);
+        dot.setStrokeWidth(1.0);
+
+        Tooltip.install(dot, new Tooltip(
+                (isParty ? "Ally" : "Enemy") + " • " +
+                        (isParty ? state.getPartyLineup().tierOf(c) : state.getEnemyLineup().tierOf(c))
+        ));
+
+        HBox header = new HBox(8, dot, info);
+        VBox stats = new VBox(3, hp, mg);
+        VBox row = new VBox(5, header, stats);
+        row.setStyle(NEUTRAL_STYLE);
+
+        // store for later highlight/clear
+        rowByCombatant.put(c, row);
+        dotByCombatant.put(c, dot);
+
+        // click/hover handlers only active in target-select mode
+        row.setOnMouseEntered(e -> {
+            if (!awaitingTarget) return;
+            previewAoETier(c);
+        });
+        row.setOnMouseExited(e -> {
+            if (!awaitingTarget) return;
+            if (selectedTarget != null) {
+                applyLockedSelection();  // keep selection visible
+            } else {
+                clearAoEPreview();       // no selection yet → clear preview
+            }
+        });
+        row.setOnMouseClicked(e -> {
+            if (!awaitingTarget) return;
+            // emulate your previous onTargetClicked, but with combatant directly
+            onTargetChosen(c);
+        });
+
+        return row;
+    }
+
+    private void previewAoETier(Combatant hovered) {
+        clearAoEPreview();
+        if (pendingAction == null) return;
+
+        List<Combatant> willHit = TargetingResolver.resolveTargets(state, pendingAction, hovered);
+        for (Combatant t : willHit) {
+            VBox row = rowByCombatant.get(t);
+            if (row != null) row.setStyle(STYLE_AOE);
+            Circle d = dotByCombatant.get(t);
+            if (d != null) { d.setStroke(Color.DODGERBLUE); d.setStrokeWidth(2.0); }
+        }
+        // primary hovered target emphasized
+        VBox main = rowByCombatant.get(hovered);
+        if (main != null) main.setStyle(SELECTED_STYLE);
+    }
+
+    private void clearAoEPreview() {
+        for (var row : rowByCombatant.values()) row.setStyle(NEUTRAL_STYLE);
+        for (var dot : dotByCombatant.values()) { dot.setStroke(Color.BLACK); dot.setStrokeWidth(1.0); }
+    }
+
+
+
 
     /** Enter target-selection mode for the chosen action. */
     private void enterTargetSelection(Combatant actor, Action action) {
@@ -190,42 +215,53 @@ public class BattleScreen extends BorderPane implements EventListener {
         refreshActionUI();
     }
 
-    /** Called when an enemy row is clicked while in selection mode. */
-    private void onTargetClicked(Node enemyRow, Combatant target) {
-        selectedTarget = target;
-        highlightOnly(enemyRow);
+    private void applyLockedSelection() {
+        clearAoEPreview(); // reset everything first
+        if (selectedTarget == null || pendingAction == null) return;
 
-        // Show a confirm button
+        // Re-highlight the selected target + its AoE group
+        List<Combatant> willHit = TargetingResolver.resolveTargets(state, pendingAction, selectedTarget);
+        for (Combatant t : willHit) {
+            VBox row = rowByCombatant.get(t);
+            if (row != null) row.setStyle(STYLE_AOE);
+            Circle d = dotByCombatant.get(t);
+            if (d != null) { d.setStroke(Color.DODGERBLUE); d.setStrokeWidth(2.0); }
+        }
+        VBox main = rowByCombatant.get(selectedTarget);
+        if (main != null) main.setStyle(SELECTED_STYLE);
+    }
+
+
+    /** Called when an enemy row is clicked while in selection mode. */
+    private void onTargetChosen(Combatant target) {
+        selectedTarget = target;
+        applyLockedSelection();
+        clearAoEPreview();
+
+        previewAoETier(target); // keep the visual selection while confirming
+
         Button confirm = new Button("Confirm: " + pendingAction.getName() + " → " + target.getName());
         confirm.setOnAction(e -> {
-            // safety checks
             if (pendingActor == null || pendingAction == null || selectedTarget == null) return;
+
             List<Combatant> finalTargets = TargetingResolver.resolveTargets(state, pendingAction, selectedTarget);
             engine.performAction(state, pendingActor, pendingAction, finalTargets);
 
-
-            // End selection mode and proceed
             awaitingTarget = false;
             pendingActor = null;
             pendingAction = null;
             selectedTarget = null;
-            clearEnemyHighlights();
+            clearAoEPreview();
 
             processTurn();
         });
 
-        // Replace or append the confirm button in the actionBox
-        if (actionBox.getChildren().size() == 2) {
-            actionBox.getChildren().add(confirm); // after prompt + cancel
-        } else {
-            // keep prompt and cancel at index 0,1; replace confirm at 2
-            if (actionBox.getChildren().size() > 2) {
-                actionBox.getChildren().set(2, confirm);
-            } else {
-                actionBox.getChildren().add(confirm);
-            }
-        }
+        // show confirm button (keep your existing actionBox placement)
+        if (actionBox.getChildren().size() == 2) actionBox.getChildren().add(confirm);
+        else if (actionBox.getChildren().size() > 2) actionBox.getChildren().set(2, confirm);
+        else actionBox.getChildren().add(confirm);
     }
+
 
     private void clearEnemyHighlights() {
         for (Node n : nodeToCombatant.keySet()) {
