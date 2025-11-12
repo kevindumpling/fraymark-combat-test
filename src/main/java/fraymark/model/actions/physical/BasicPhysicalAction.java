@@ -13,12 +13,13 @@ import fraymark.model.effects.EffectDescriptor;
  * A placeholder for basic physical actions.
  * TODO: make better
  */
-public class BasicPhysicalAction implements Action {
+public class BasicPhysicalAction implements Physical {
     private final String name;
     private final int power;
     protected final List<EffectDescriptor> effectBundle = new ArrayList<>();
     private final String flavorOnUse;
     private final int trpGain;
+    private final int mgGainOrCost;
 
     private final TargetingMode targeting;
     private final AttackRangeKind rangeKind;
@@ -26,18 +27,29 @@ public class BasicPhysicalAction implements Action {
     private final double aoeEffectMultiplier;      // default 1.0
     private final List<EffectDescriptor> aoeEffectBundle;   // default empty
 
-    public BasicPhysicalAction(String name, int power, int trpGain, String flavorOnUse, TargetingMode targeting, AttackRangeKind rangeKind,
+    private final MomentumProfile momentumProfile;     // nullable
+    private final CloseRangeProfile closeRangeProfile; // nullable
+    private final ExecutionProfile executionProfile; // nullable
+
+    public BasicPhysicalAction(String name, int power, int trpGain, int mgGainOrCost, MomentumProfile momentumProfile, CloseRangeProfile closeRangeProfile,
+                               ExecutionProfile executionProfile, String flavorOnUse,
+                               TargetingMode targeting, AttackRangeKind rangeKind,
                                double aoeDamageMultiplier, double aoeEffectMultiplier, List<EffectDescriptor> aoeEffectBundle) {
         this.name = name;
         this.power = power;
         this.flavorOnUse  = flavorOnUse;
         this.trpGain = trpGain;
+        this.mgGainOrCost = mgGainOrCost;
 
         this.targeting = targeting;
         this.rangeKind =  rangeKind;
         this.aoeDamageMultiplier = aoeDamageMultiplier;
         this.aoeEffectMultiplier = aoeEffectMultiplier;
         this.aoeEffectBundle = aoeEffectBundle;
+
+        this.momentumProfile = momentumProfile;
+        this.closeRangeProfile = closeRangeProfile;
+        this.executionProfile = executionProfile;
     }
 
     @Override public String getName() { return name; }
@@ -45,7 +57,10 @@ public class BasicPhysicalAction implements Action {
     @Override public int getTrpCost() { return 0; }
 
     @Override
-    public boolean canUse(Combatant user) { return true; }
+    public boolean canUse(Combatant user) {
+        if (this.mgGainOrCost >= 0){ return true; }
+        return user.getResources().getMg() >= this.mgGainOrCost;
+    }
 
     @Override
     public ActionResult execute(ActionContext context) {
@@ -53,6 +68,10 @@ public class BasicPhysicalAction implements Action {
         List<Combatant> targets = context.targets();
         List<CombatEvent> events = new ArrayList<>();
 
+        // Give all benefits to the user.
+        user.getResources().setTrp(user.getResources().getTrp() + this.trpGain);
+
+        // Deal the effect.
         for (int i = 0; i < targets.size(); i++) {
             Combatant t = targets.get(i);
             boolean primary = (i == 0);
@@ -86,11 +105,16 @@ public class BasicPhysicalAction implements Action {
 
     public void addEffectDescriptor(EffectDescriptor d) { this.effectBundle.add(d); }
 
-    public String getFlavorOnUse() { return flavorOnUse; }
-
+    @Override public String getFlavorOnUse() { return flavorOnUse; }
     @Override public TargetingMode getTargeting() { return targeting; }
     @Override public AttackRangeKind getRangeKind() { return rangeKind; }
     public double getAoeDamageMultiplier() { return aoeDamageMultiplier; }
     public double getAoeEffectMagnitudeMultiplier() { return aoeEffectMultiplier; }
     public List<EffectDescriptor> getAoeEffectBundle() { return aoeEffectBundle; }
+    @Override public int getMgGainOrCost(){ return this.mgGainOrCost;}
+    public int getMgGain() { return this.mgGainOrCost; }
+    @Override public MomentumProfile getMomentumProfile() { return momentumProfile; }
+    @Override public CloseRangeProfile getCloseRangeProfile() { return closeRangeProfile; }
+    @Override public ExecutionProfile getExecutionProfile() { return executionProfile; }
+
 }

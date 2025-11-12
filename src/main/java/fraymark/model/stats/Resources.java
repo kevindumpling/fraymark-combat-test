@@ -24,6 +24,9 @@ public class Resources {
     private final IntegerProperty trp = new SimpleIntegerProperty();
     private final IntegerProperty barrier = new SimpleIntegerProperty();
     private final IntegerProperty focus = new SimpleIntegerProperty();
+    private final IntegerProperty armorAmount = new SimpleIntegerProperty();
+
+    private int defaultMgLoss = 10;  // The amount of MG that is lost by default on choosing a non-physical action.
 
     // stats for rolling HP
     private int pendingHpLoss = 0;                // queued damage not yet applied
@@ -32,12 +35,12 @@ public class Resources {
     private transient Timeline hpRoller;  // timeline for HP rolling that runs on UI thread
     private double rollCarry = 0.0;  // fractional accumulator for rolling HP
 
-    public Resources(int hp, int mg, int trp, int barrier, int focus) {
+    public Resources(int hp, int mg, int trp, int barrier, int armorAmount) {
         this.hp.set(hp);
         this.mg.set(mg);
         this.trp.set(trp);
         this.barrier.set(barrier);
-        this.focus.set(focus);
+        this.armorAmount.set(armorAmount);
     }
 
     // === rolling configuration ===
@@ -88,6 +91,13 @@ public class Resources {
         if (pendingHpLoss <= 0 && hpRoller != null) hpRoller.stop();
     }
 
+    public void forceKill() {
+        // stop rolling and set HP to 0 immediately
+        pendingHpLoss = 0;
+        if (hpRoller != null) hpRoller.stop();
+        hp.set(0);
+    }
+
     // === HP ===
     public int getHp() { return hp.get(); }
     public void setHp(int value) { hp.set(value); }
@@ -98,6 +108,9 @@ public class Resources {
     public int getMg() { return mg.get(); }
     public void setMg(int value) { mg.set(value); }
     public IntegerProperty mgProperty() { return mg; }
+    public int getDefaultMgLoss() { return this.defaultMgLoss; }
+    public void setDefaultMgLoss(int loss) { this.defaultMgLoss = loss; }
+
 
     // === TRP ===
     public int getTrp() { return trp.get(); }
@@ -110,8 +123,8 @@ public class Resources {
 
     public IntegerProperty barrierProperty() { return barrier; }
 
-    // === Focus ===
-    public int getFocus() { return focus.get(); }
-    public void setFocus(int value) { focus.set(value); }
-    public IntegerProperty focusProperty() { return focus; }
+    // === Armor ===
+    public int getArmorAmount() { return armorAmount.get(); }
+    public void setArmorAmount(int value) { armorAmount.set(value); }
+    public IntegerProperty armorProperty() { return armorAmount; }
 }

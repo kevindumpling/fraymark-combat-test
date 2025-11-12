@@ -28,11 +28,22 @@ public class FraymarkApp extends Application {
         // Hook up event pipeline.
         EventBus bus = new EventBus();
         DamagePipeline pipeline = new DamagePipeline();
-        pipeline.addHandler(new BarrierHandler());
-        pipeline.addHandler(new ArmorHandler());
-        pipeline.addHandler(new ExecutionHandler());
+
+        // pre-damage scaling
+        pipeline.addHandler(new MomentumScalingHandler());
+        pipeline.addHandler(new CloseRangeBonusHandler());
+        pipeline.addHandler(new MgGainHandler());
+
+        // damage negation/armor
+        pipeline.addHandler(new BarrierHandler());  // damage absorbption via shielding
+        pipeline.addHandler(new ArmorHandler());  // damage to armorAmount goes here
+        pipeline.addHandler(new DefenseHandler());
+
+        // special behavior
         pipeline.addHandler(new CounterHandler());
         pipeline.addHandler(new InterruptHandler(bus));
+        pipeline.addHandler(new ExecutionHandler());
+
         pipeline.addHandler(new ApplyDamageHandler()); // last stage
 
         // Hook up resolvers and engine.
@@ -46,18 +57,6 @@ public class FraymarkApp extends Application {
         stage.show();
     }
 
-    private Combatant buildPlayer() {
-        Stats stats = new Stats(200, 50, 40, 55, 35, 20);
-        Resources res = new Resources(200, 0, 0, 0, 0);
-        PlayerCharacter sam = new PlayerCharacter("sam", "Sam", stats, res, false);
-        return sam;
-    }
-
-    private Combatant buildEnemy() {
-        Stats stats = new Stats(150, 45, 35, 20, 20, 20);
-        Resources res = new Resources(150, 0, 0, 0, 0);
-        return new Enemy("goon", "Unarmored Goon", stats, res, false, 1);
-    }
 
     public static void main(String[] args) {
         launch(args);

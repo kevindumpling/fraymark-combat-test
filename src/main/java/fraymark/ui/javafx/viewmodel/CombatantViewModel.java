@@ -8,7 +8,8 @@ import javafx.beans.property.*;
  * - Model: accesses the Combatant as a model. <br>
  * - View: communicates information about the combatant through getters. <br>
  */
-public class CombatantViewModel {
+public class
+CombatantViewModel {
     private final Combatant model;
 
     private final StringProperty name = new SimpleStringProperty();

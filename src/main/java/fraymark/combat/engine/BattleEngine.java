@@ -1,10 +1,14 @@
 package fraymark.combat.engine;
 
 import fraymark.model.actions.*;
+import fraymark.model.actions.physical.Physical;
+import fraymark.model.actions.weaves.WeaveAction;
 import fraymark.model.combatants.Combatant;
 import fraymark.combat.events.*;
 import fraymark.combat.damage.DamageContext;
 import fraymark.combat.damage.pipeline.DamagePipeline;
+import fraymark.model.position.DistanceTier;
+
 import java.util.List;
 
 /**
@@ -53,25 +57,48 @@ public class BattleEngine {
             ));
         }
 
-        // Execute the action
+        // === Execute the action ===
+
+        // Pre-announce
+        Combatant primary = targets.isEmpty() ? actor : targets.get(0);
+        if (action instanceof WeaveAction wa) {
+            eventBus.publish(CombatEvent.logEvent(actor, primary,
+                    "\n"+actor.getName() + " tried " + wa.getName() + "!"));
+            if (wa.getFlavorOnUse() != null && !wa.getFlavorOnUse().isBlank())
+                eventBus.publish(CombatEvent.logEvent(actor, primary, wa.getFlavorOnUse()));
+        } else if (action instanceof Physical pa) {
+            eventBus.publish(CombatEvent.logEvent(actor, primary,
+                  "\n"+  actor.getName() + " used " + pa.getName() + "!"));
+            if (pa.getFlavorOnUse() != null && !pa.getFlavorOnUse().isBlank())
+                eventBus.publish(CombatEvent.logEvent(actor, primary, pa.getFlavorOnUse()));
+        }
         ActionContext ctx = new ActionContext(actor, targets);
         ActionResult result = action.execute(ctx);
 
 
         // Process all events from the action
         for (CombatEvent ev : result.events()) {
-            eventBus.publish(ev);  // Publish the event.
 
             System.out.println("DEBUG: Event type=" + ev.getType() +
                     " message=" + ev.getMessage() +
                     " amount=" + ev.getAmount());
 
-            if (ev.getType() == CombatEventType.DAMAGE) {
+            if (ev.getType() != CombatEventType.DAMAGE) {
+                eventBus.publish(ev);  // Publish the event.
+            } else{
+                boolean targetIsAlly = state.getParty().contains(ev.getTarget());
+                var lineup = targetIsAlly ? state.getPartyLineup() : state.getEnemyLineup();
+                boolean isClose = lineup.tierOf(ev.getTarget()) == DistanceTier.CLOSE;
+
+                int baseMg = (action instanceof Physical pa) ? pa.getMgGainOrCost() : 0;
+
                 DamageContext dctx = new DamageContext(
-                        ev.getSource(), ev.getTarget(), ev.getAmount(), action, eventBus);
+                        ev.getSource(), ev.getTarget(), ev.getAmount(), action, eventBus)
+                        .withRangeKind(action.getRangeKind())
+                        .withTargetIsClose(isClose)
+                        .withBaseMgGain(baseMg);
+
                 pipeline.process(dctx); // ApplyDamageHandler updates HP
-            } else {
-                // TODO PASS
             }
         }
 

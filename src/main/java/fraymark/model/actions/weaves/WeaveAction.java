@@ -4,8 +4,11 @@ import fraymark.model.actions.*;
 import fraymark.model.combatants.Combatant;
 import fraymark.model.effects.*;
 import fraymark.combat.events.CombatEvent;
+import fraymark.model.stats.Resources;
 
 import java.util.*;
+
+import static java.lang.Math.max;
 
 /***
  * A WeaveAction represents a Weave attack.
@@ -42,6 +45,12 @@ public class WeaveAction implements Action {
         List<Combatant> targets = context.targets();
         List<CombatEvent> events = new ArrayList<>();
 
+        // All weave actions will lower the user's MG, since they cannot have
+        // chosen both a physical and weave action at once.
+        Resources userResources = context.user().getResources();
+        userResources.setMg(max(0, userResources.getMg() - userResources.getDefaultMgLoss()));
+
+        // Apply the effects to the targets.
         for (Combatant c : targets){
             Combatant user = context.user();
             Combatant target = c;
@@ -91,6 +100,7 @@ public class WeaveAction implements Action {
 
     public void addEffectDescriptor(EffectDescriptor d) { this.effectBundle.add(d); }
 
+    @Override
     public String getFlavorOnUse() { return flavorOnUse; }
 
     @Override public TargetingMode getTargeting() { return targeting; }

@@ -20,15 +20,13 @@ public class Combatant {
     private Weapon weapon;
     private final List<Action> actions = new ArrayList<>();
     private final List<Effect> statusEffects = new ArrayList<>();
-    private boolean armored;
     private boolean playerControlled;
 
-    public Combatant(String id, String name, Stats stats, Resources resources, boolean armored, boolean playerControlled) {
+    public Combatant(String id, String name, Stats stats, Resources resources, boolean playerControlled) {
         this.id = id;
         this.name = name;
         this.stats = stats;
         this.resources = resources;
-        this.armored = armored;
         this.playerControlled = playerControlled;
     }
 
@@ -46,7 +44,7 @@ public class Combatant {
     public Weapon getWeapon() { return weapon; }
     public void setWeapon(Weapon weapon) { this.weapon = weapon; }
 
-    public boolean isArmored() { return armored; }
+    public boolean isArmored() { return this.getResources().getArmorAmount() > 0; }
     public boolean isPlayerControlled() { return playerControlled; }
 
     public void addStatus(Effect effect) { this.statusEffects.add(effect); }

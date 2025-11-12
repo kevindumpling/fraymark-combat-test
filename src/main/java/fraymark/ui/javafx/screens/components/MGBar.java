@@ -14,7 +14,7 @@ import javafx.scene.text.Text;
 public class MGBar extends ProgressBar {
     public MGBar(CombatantViewModel vm) {
         progressProperty().bind(
-                Bindings.divide(vm.mgProperty().multiply(1.0), 100.0)
+                Bindings.divide(vm.mgProperty().multiply(1.0), 100.0)  // assumed that max MG is 100%
         );
     }
 }

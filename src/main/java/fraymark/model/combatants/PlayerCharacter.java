@@ -8,7 +8,7 @@ import fraymark.model.stats.Resources;
  * TODO: include inventory, experience, and dialogue bindings.
  */
 public class PlayerCharacter extends Combatant {
-    public PlayerCharacter(String id, String name, Stats stats, Resources res, boolean armored) {
-        super(id, name, stats, res, armored, true);
+    public PlayerCharacter(String id, String name, Stats stats, Resources res) {
+        super(id, name, stats, res, true);
     }
 }
