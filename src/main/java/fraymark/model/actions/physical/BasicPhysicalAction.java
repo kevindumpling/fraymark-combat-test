@@ -22,8 +22,12 @@ public class BasicPhysicalAction implements Action {
 
     private final TargetingMode targeting;
     private final AttackRangeKind rangeKind;
+    private final double aoeDamageMultiplier;               // default 1.0
+    private final double aoeEffectMultiplier;      // default 1.0
+    private final List<EffectDescriptor> aoeEffectBundle;   // default empty
 
-    public BasicPhysicalAction(String name, int power, int trpGain, String flavorOnUse, TargetingMode targeting, AttackRangeKind rangeKind) {
+    public BasicPhysicalAction(String name, int power, int trpGain, String flavorOnUse, TargetingMode targeting, AttackRangeKind rangeKind,
+                               double aoeDamageMultiplier, double aoeEffectMultiplier, List<EffectDescriptor> aoeEffectBundle) {
         this.name = name;
         this.power = power;
         this.flavorOnUse  = flavorOnUse;
@@ -31,6 +35,9 @@ public class BasicPhysicalAction implements Action {
 
         this.targeting = targeting;
         this.rangeKind =  rangeKind;
+        this.aoeDamageMultiplier = aoeDamageMultiplier;
+        this.aoeEffectMultiplier = aoeEffectMultiplier;
+        this.aoeEffectBundle = aoeEffectBundle;
     }
 
     @Override public String getName() { return name; }
@@ -42,35 +49,37 @@ public class BasicPhysicalAction implements Action {
 
     @Override
     public ActionResult execute(ActionContext context) {
-        List<Combatant> targets =  context.targets();
+        Combatant user = context.user();
+        List<Combatant> targets = context.targets();
         List<CombatEvent> events = new ArrayList<>();
 
-        for (Combatant c: targets){
-            Combatant user = context.user();
-            Combatant target = c;
+        for (int i = 0; i < targets.size(); i++) {
+            Combatant t = targets.get(i);
+            boolean primary = (i == 0);
 
-            events.add(CombatEvent.damageEvent(user, target, this.power, "\n" + user.getName() + " used " + getName()));
-            user.getResources().setTrp(user.getResources().getTrp() + this.trpGain);
+            // damage
+            int base = this.power;
+            int dmg = primary ? base : (int) Math.round(base * aoeDamageMultiplier);
+            events.add(CombatEvent.damageEvent(user, t, dmg, "\n" + context.user().getName() + " used " + this.getName()));
 
-            // Add on-use flavor line (if provided)
-            if (flavorOnUse != null && !flavorOnUse.isBlank()) {
-                events.add(CombatEvent.logEvent(
-                        user, target, flavorOnUse
-                ));
+            // effects: choose list, then (optionally) scale magnitudes for splash
+            List<EffectDescriptor> list = primary
+                    ? this.effectBundle
+                    : (!aoeEffectBundle.isEmpty() ? aoeEffectBundle : this.effectBundle);
+
+            for (EffectDescriptor desc : list) {
+                Effect e = desc.instantiate(user, t);
+
+                // Optional: scale magnitude for splash if using the main list
+                if (!primary && aoeEffectBundle.isEmpty() && aoeEffectMultiplier != 1.0) {
+                    e.scaleMagnitude(aoeEffectMultiplier); // implement a no-op if not supported
+                }
+
+                e.onApply(t);
+                t.addStatus(e);
+                events.add(CombatEvent.logEvent(user, t, t.getName() + " is affected by " + e.getName()));
             }
-
-            // Apply all attached effects.
-            for (EffectDescriptor desc : effectBundle) {
-                Effect effect = desc.instantiate(user, target);
-                effect.onApply(target);
-                target.addStatus(effect);
-                events.add(CombatEvent.logEvent(
-                        user, target, target.getName() + "was affected by " + effect.getName() + "!"));
-            }
-
-
         }
-
 
         return new ActionResult(events);
     }
@@ -81,6 +90,7 @@ public class BasicPhysicalAction implements Action {
 
     @Override public TargetingMode getTargeting() { return targeting; }
     @Override public AttackRangeKind getRangeKind() { return rangeKind; }
-
-
+    public double getAoeDamageMultiplier() { return aoeDamageMultiplier; }
+    public double getAoeEffectMagnitudeMultiplier() { return aoeEffectMultiplier; }
+    public List<EffectDescriptor> getAoeEffectBundle() { return aoeEffectBundle; }
 }

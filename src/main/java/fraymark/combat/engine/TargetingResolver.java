@@ -9,7 +9,7 @@ import java.util.*;
 public class TargetingResolver {
     public static List<Combatant> resolveTargets(BattleState state, Action action, Combatant clicked) {
         if (clicked == null) return List.of();
-        if (action == null)  return List.of(clicked);
+        if (action == null) return List.of(clicked);
 
         TargetingMode mode = action.getTargeting();
         if (mode == null) mode = TargetingMode.SINGLE;
@@ -24,11 +24,18 @@ public class TargetingResolver {
             case AOE_ALL -> (ally ? state.getParty() : state.getEnemies());
         };
 
-        return raw.stream()
+        List<Combatant> ordered = new ArrayList<>(raw.size());
+        if (!raw.isEmpty()) {
+            ordered.add(clicked); // primary target is the first element of the list
+            for (Combatant c : raw) {
+                if (c != clicked) ordered.add(c);
+            }
+        }
+
+        return ordered.stream()
                 .filter(Objects::nonNull)
                 .filter(c -> c.getResources().getHp() > 0)
                 .distinct()
                 .toList();
     }
-
 }
