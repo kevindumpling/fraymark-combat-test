@@ -34,9 +34,9 @@ public class FraymarkApp extends Application {
         pipeline.addHandler(new CloseRangeBonusHandler());
         pipeline.addHandler(new MgGainHandler());
 
-        // damage negation
-        pipeline.addHandler(new BarrierHandler());
-        //pipeline.addHandler(new ArmorHandler());
+        // damage negation/armor
+        pipeline.addHandler(new BarrierHandler());  // damage absorbption via shielding
+        pipeline.addHandler(new ArmorHandler());  // damage to armorAmount goes here
         pipeline.addHandler(new DefenseHandler());
 
         // special behavior
