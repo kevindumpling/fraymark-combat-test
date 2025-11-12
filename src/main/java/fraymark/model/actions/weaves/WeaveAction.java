@@ -19,8 +19,12 @@ public class WeaveAction implements Action {
 
     private final TargetingMode targeting;
     private final AttackRangeKind rangeKind;
+    private final double aoeDamageMultiplier;               // default 1.0
+    private final double aoeEffectMultiplier;      // default 1.0
+    private final List<EffectDescriptor> aoeEffectBundle;   // default empty
 
-    public WeaveAction(String name, int power, int trpCost, String flavorOnUse, TargetingMode targeting, AttackRangeKind rangeKind) {
+    public WeaveAction(String name, int power, int trpCost, String flavorOnUse, TargetingMode targeting, AttackRangeKind rangeKind,
+                       double aoeDamageMultiplier, double aoeEffectMultiplier, List<EffectDescriptor> aoeEffectBundle) {
         this.power = power;
         this.name = name;
         this.trpCost = trpCost;
@@ -28,6 +32,9 @@ public class WeaveAction implements Action {
 
         this.targeting = targeting;
         this.rangeKind = rangeKind;
+        this.aoeDamageMultiplier = aoeDamageMultiplier;
+        this.aoeEffectMultiplier = aoeEffectMultiplier;
+        this.aoeEffectBundle = aoeEffectBundle;
     }
 
     @Override
@@ -88,5 +95,7 @@ public class WeaveAction implements Action {
 
     @Override public TargetingMode getTargeting() { return targeting; }
     @Override public AttackRangeKind getRangeKind() { return rangeKind; }
-
+    public double getAoeDamageMultiplier() { return aoeDamageMultiplier; }
+    public double getAoeEffectMagnitudeMultiplier() { return aoeEffectMultiplier; }
+    public List<EffectDescriptor> getAoeEffectBundle() { return aoeEffectBundle; }
 }

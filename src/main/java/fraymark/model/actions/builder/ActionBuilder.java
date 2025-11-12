@@ -20,19 +20,27 @@ public class ActionBuilder {
             throw new IllegalArgumentException("Missing 'type' field in action entry: " + data);
         }
 
+        // === 1. BEGIN PARSING ACTION DATA ===
         String name = (String) data.getOrDefault("name", "Unnamed Action");
         int power = ((Number) data.getOrDefault("power", 0)).intValue();
         int trpCost = ((Number) data.getOrDefault("trpCost", 0)).intValue();
         String flavorOnUse = (String) data.getOrDefault("flavorOnUse", "");
+
         String targeting = (String) data.getOrDefault("targeting", "SINGLE");
         String rangeKind = (String) data.getOrDefault("rangeKind", "ALL");
+        double aoeDmgMul = ((Number) data.getOrDefault("aoeDamageMultiplier", 1.0)).doubleValue();
+        double aoeEffMul = ((Number) data.getOrDefault("aoeEffectMultiplier", 1.0)).doubleValue();
+        List<EffectDescriptor> aoeEffects = this.parseAoeEffects(data);  // calling on a helper for this one
+
 
         System.out.println("Building action: " + data.get("id") + " (" + type + ")");
 
-        // 1) Construct the action instance
+        // === 2. BUILD THE ACTION INSTANCE ===
         Action action = switch (type.toUpperCase(Locale.ROOT)) {
-            case "PHYSICAL_BASIC", "WEAPON" -> new BasicPhysicalAction(name, power, trpCost, flavorOnUse,  TargetingMode.valueOf(targeting), AttackRangeKind.valueOf(rangeKind));
-            case "WEAVE" -> new WeaveAction(name, power, trpCost, flavorOnUse, TargetingMode.valueOf(targeting), AttackRangeKind.valueOf(rangeKind));
+            case "PHYSICAL_BASIC", "WEAPON" -> new BasicPhysicalAction(name, power, trpCost, flavorOnUse,
+                    TargetingMode.valueOf(targeting), AttackRangeKind.valueOf(rangeKind), aoeDmgMul, aoeEffMul, aoeEffects);
+            case "WEAVE" -> new WeaveAction(name, power, trpCost, flavorOnUse,
+                    TargetingMode.valueOf(targeting), AttackRangeKind.valueOf(rangeKind), aoeDmgMul, aoeEffMul, aoeEffects);
             default -> throw new IllegalArgumentException("Unknown action type: " + type);
         };
 
@@ -68,5 +76,21 @@ public class ActionBuilder {
         }
 
         return action;
+    }
+
+    private List<EffectDescriptor>parseAoeEffects(Map<String, Object> data){
+        List<EffectDescriptor> aoeEffects = new ArrayList<>();
+        Object rawAoe = data.get("aoeEffects");
+        if (rawAoe instanceof List<?> list) {
+            for (Object o : list) {
+                if (o instanceof Map<?,?> m) {
+                    String t = (String) m.get("type");
+                    if (t != null) {
+                        aoeEffects.add(effectFactory.descriptor(t, (Map<String,Object>) m));
+                    }
+                }
+            }
+        }
+        return aoeEffects;
     }
 }

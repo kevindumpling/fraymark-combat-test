@@ -9,7 +9,7 @@ import fraymark.model.combatants.Combatant;
 public class SimpleEffect implements Effect {
     private final String name;
     private final EffectType type;
-    private final int magnitude;   // e.g., damage per tick or stat delta
+    private int magnitude;   // e.g., damage per tick or stat delta
     private int remaining;         // duration in turns
 
     public SimpleEffect(String name, EffectType type, int magnitude, int duration) {
@@ -66,4 +66,10 @@ public class SimpleEffect implements Effect {
     public String getName() {
         return name;
     }
+
+    @Override
+    public void scaleMagnitude(double mul){
+        this.magnitude = (int)(this.magnitude*mul);  // todo: this might not be a great way to calculate
+    }
+
 }

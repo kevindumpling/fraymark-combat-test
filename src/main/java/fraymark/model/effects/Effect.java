@@ -16,4 +16,8 @@ public interface Effect {
     boolean isExpired();
 
     String getName();
+
+    void scaleMagnitude(double mul);
+
+    default double rollRateMultiplier() { return 1.0; }  // override in Bleed/Poison/etc. if desired
 }
