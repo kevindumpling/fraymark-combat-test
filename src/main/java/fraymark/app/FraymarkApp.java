@@ -28,11 +28,21 @@ public class FraymarkApp extends Application {
         // Hook up event pipeline.
         EventBus bus = new EventBus();
         DamagePipeline pipeline = new DamagePipeline();
+
+        // pre-damage scaling
+        pipeline.addHandler(new MomentumScalingHandler());
+        pipeline.addHandler(new CloseRangeBonusHandler());
+        pipeline.addHandler(new MgGainHandler());
+
+        // damage negation
         pipeline.addHandler(new BarrierHandler());
         pipeline.addHandler(new ArmorHandler());
+
+        // special behavior
         pipeline.addHandler(new ExecutionHandler());
         pipeline.addHandler(new CounterHandler());
         pipeline.addHandler(new InterruptHandler(bus));
+
         pipeline.addHandler(new ApplyDamageHandler()); // last stage
 
         // Hook up resolvers and engine.

@@ -13,7 +13,7 @@ import fraymark.model.effects.EffectDescriptor;
  * A placeholder for basic physical actions.
  * TODO: make better
  */
-public class BasicPhysicalAction implements Action {
+public class BasicPhysicalAction implements Physical {
     private final String name;
     private final int power;
     protected final List<EffectDescriptor> effectBundle = new ArrayList<>();
@@ -27,7 +27,12 @@ public class BasicPhysicalAction implements Action {
     private final double aoeEffectMultiplier;      // default 1.0
     private final List<EffectDescriptor> aoeEffectBundle;   // default empty
 
-    public BasicPhysicalAction(String name, int power, int trpGain, int mgGainOrCost, String flavorOnUse, TargetingMode targeting, AttackRangeKind rangeKind,
+    private final MomentumProfile momentumProfile;     // nullable
+    private final CloseRangeProfile closeRangeProfile; // nullable
+
+    public BasicPhysicalAction(String name, int power, int trpGain, int mgGainOrCost, MomentumProfile momentumProfile, CloseRangeProfile closeRangeProfile,
+                               String flavorOnUse,
+                               TargetingMode targeting, AttackRangeKind rangeKind,
                                double aoeDamageMultiplier, double aoeEffectMultiplier, List<EffectDescriptor> aoeEffectBundle) {
         this.name = name;
         this.power = power;
@@ -40,6 +45,9 @@ public class BasicPhysicalAction implements Action {
         this.aoeDamageMultiplier = aoeDamageMultiplier;
         this.aoeEffectMultiplier = aoeEffectMultiplier;
         this.aoeEffectBundle = aoeEffectBundle;
+
+        this.momentumProfile = momentumProfile;
+        this.closeRangeProfile = closeRangeProfile;
     }
 
     @Override public String getName() { return name; }
@@ -60,7 +68,6 @@ public class BasicPhysicalAction implements Action {
 
         // Give all benefits to the user.
         user.getResources().setTrp(user.getResources().getTrp() + this.trpGain);
-        user.getResources().setMg(user.getResources().getMg() + this.mgGainOrCost);
 
         // Deal the effect.
         for (int i = 0; i < targets.size(); i++) {
@@ -96,11 +103,15 @@ public class BasicPhysicalAction implements Action {
 
     public void addEffectDescriptor(EffectDescriptor d) { this.effectBundle.add(d); }
 
-    public String getFlavorOnUse() { return flavorOnUse; }
-
+    @Override public String getFlavorOnUse() { return flavorOnUse; }
     @Override public TargetingMode getTargeting() { return targeting; }
     @Override public AttackRangeKind getRangeKind() { return rangeKind; }
     public double getAoeDamageMultiplier() { return aoeDamageMultiplier; }
     public double getAoeEffectMagnitudeMultiplier() { return aoeEffectMultiplier; }
     public List<EffectDescriptor> getAoeEffectBundle() { return aoeEffectBundle; }
+    @Override public int getMgGainOrCost(){ return this.mgGainOrCost;}
+    public int getMgGain() { return this.mgGainOrCost; }
+    @Override public MomentumProfile getMomentumProfile() { return momentumProfile; }
+    @Override public CloseRangeProfile getCloseRangeProfile() { return closeRangeProfile; }
+
 }

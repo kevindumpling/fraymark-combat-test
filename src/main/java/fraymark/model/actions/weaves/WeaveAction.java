@@ -100,6 +100,7 @@ public class WeaveAction implements Action {
 
     public void addEffectDescriptor(EffectDescriptor d) { this.effectBundle.add(d); }
 
+    @Override
     public String getFlavorOnUse() { return flavorOnUse; }
 
     @Override public TargetingMode getTargeting() { return targeting; }

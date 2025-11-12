@@ -19,8 +19,10 @@ public interface Action {
     ActionResult execute(ActionContext context);
 
     boolean canUse(Combatant user);
+    public String getFlavorOnUse();
 
     default TargetingMode getTargeting() { return TargetingMode.SINGLE; }
+
     default AttackRangeKind getRangeKind() { return AttackRangeKind.ALL; }
     default double getAoeDamageMultiplier() { return 1.0; }
     default double getAoeEffectMagnitudeMultiplier() { return 1.0; }

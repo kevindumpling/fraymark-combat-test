@@ -2,11 +2,13 @@ package fraymark.model.actions.builder;
 
 import fraymark.model.actions.*;
 import fraymark.model.actions.physical.BasicPhysicalAction;
+import fraymark.model.actions.physical.CloseRangeProfile;
 import fraymark.model.actions.weaves.WeaveAction;
 import fraymark.model.effects.EffectDescriptor;
 import fraymark.model.effects.factory.EffectFactory;
 
 import java.util.*;
+import fraymark.model.actions.physical.MomentumProfile;
 
 public class ActionBuilder {
     private final EffectFactory effectFactory;
@@ -25,8 +27,9 @@ public class ActionBuilder {
         int power = ((Number) data.getOrDefault("power", 0)).intValue();
         int trpCost = ((Number) data.getOrDefault("trpCost", 0)).intValue();  // this is a GAIN value for physicals
         int mgGainOrCost = ((Number) data.getOrDefault("mgGainOrCost", 0)).intValue();
-
         String flavorOnUse = (String) data.getOrDefault("flavorOnUse", "");
+        MomentumProfile momentumProfile = this.parseMomentumProfile(data);
+        CloseRangeProfile closeRangeProfile = this.parseCloseRangeProfile(data);
 
         String targeting = (String) data.getOrDefault("targeting", "SINGLE");
         String rangeKind = (String) data.getOrDefault("rangeKind", "ALL");
@@ -35,11 +38,13 @@ public class ActionBuilder {
         List<EffectDescriptor> aoeEffects = this.parseAoeEffects(data);  // calling on a helper for this one
 
 
+
         System.out.println("Building action: " + data.get("id") + " (" + type + ")");
 
         // === 2. BUILD THE ACTION INSTANCE ===
         Action action = switch (type.toUpperCase(Locale.ROOT)) {
-            case "PHYSICAL_BASIC", "WEAPON" -> new BasicPhysicalAction(name, power, trpCost, mgGainOrCost, flavorOnUse,
+            case "PHYSICAL_BASIC", "WEAPON" -> new BasicPhysicalAction(name, power, trpCost, mgGainOrCost, momentumProfile, closeRangeProfile,
+                    flavorOnUse,
                     TargetingMode.valueOf(targeting), AttackRangeKind.valueOf(rangeKind), aoeDmgMul, aoeEffMul, aoeEffects);
             case "WEAVE" -> new WeaveAction(name, power, trpCost, flavorOnUse,
                     TargetingMode.valueOf(targeting), AttackRangeKind.valueOf(rangeKind), aoeDmgMul, aoeEffMul, aoeEffects);
@@ -95,4 +100,33 @@ public class ActionBuilder {
         }
         return aoeEffects;
     }
+
+    private MomentumProfile parseMomentumProfile(Map<String, Object> data){
+        MomentumProfile mp = null;
+        var m = (Map<String,Object>) data.get("momentumProfile");
+        if (m != null) {
+            String curve = (String)m.getOrDefault("curve","linear");
+            double per = ((Number)m.getOrDefault("perMg", 0.0)).doubleValue();
+            double cap = ((Number)m.getOrDefault("cap", 0.0)).doubleValue();
+            mp = new MomentumProfile(curve, per, cap);
+            System.out.println("GWIMA BLAAAST" + mp.toString());
+
+        }
+        return mp;
+    }
+
+    private CloseRangeProfile parseCloseRangeProfile(Map<String, Object> data){
+        CloseRangeProfile cr = null;
+        var c = (Map<String,Object>) data.get("closeRangeProfile");
+        if (c != null) {
+            double dmgMul = ((Number)c.getOrDefault("damageMul",1.0)).doubleValue();
+            double bypass = ((Number)c.getOrDefault("defBypassPct",0.0)).doubleValue();
+            double mgMul = ((Number)c.getOrDefault("mgGainMul",1.0)).doubleValue();
+            cr = new CloseRangeProfile(dmgMul, bypass, mgMul);
+        }
+        return cr;
+    }
 }
+
+
+

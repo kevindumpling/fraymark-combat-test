@@ -7,6 +7,8 @@
     "trpCost": 0,
     "effects":  [],
     "description": "A punch.",
+    "momentumProfile": { "curve": "linear", "perMg": 0.1, "cap": 2.0 },
+    "closeRangeProfile": { "damageMul": 1.25, "defBypassPct": 0.30, "mgGainMul": 1.5 },
 
     "targeting": "AOE_TIER",
     "rangeKind": "RANGED"
@@ -19,9 +21,11 @@
     "trpCost": 2,
     "mgGainOrCost": 30,
     "effects":  [],
+    "momentumProfile": { "curve": "linear", "perMg": 0.01, "cap": 2.0 },
+    "closeRangeProfile": { "damageMul": 20, "defBypassPct": 0.30, "mgGainMul": 1.5 },
 
     "targeting": "AOE_TIER",
-    "rangeKind": "ALL",
+    "rangeKind": "RANGED",
     "description": "A lunge."
   },
   {
@@ -30,7 +34,9 @@
     "name": "Reverse Slash",
     "power": 60,
     "trpCost": 2,
-    "effects":  [],
+    "effects": [
+  {"type": "RES_DOWN", "name": "Demotivation", "magnitude":  1, "duration":  3}
+],
     "description": "A slash.",
     "flavorOnUse": "A Gwima Blast appeared!",
 
@@ -38,6 +44,8 @@
     "rangeKind": "ALL",
     "aoeEffectMultiplier": 0.5,
     "aoeDamageMultiplier": 0.5,
-    "aoeEffects": ["RES_DOWN"]
+    "aoeEffects": [
+  {"type": "RES_DOWN", "name": "Weak Demotivation", "magnitude":  1, "duration":  1}
+  ]
   }
 ]
