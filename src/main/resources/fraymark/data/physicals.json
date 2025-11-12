@@ -14,7 +14,9 @@
     "name": "Quick Lunge",
     "power": 60,
     "trpCost": 2,
+    "mgGainOrCost": 30,
     "effects":  [],
+
     "targeting": "AOE_TIER",
     "rangeKind": "ALL",
     "description": "A lunge."

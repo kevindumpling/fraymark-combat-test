@@ -23,7 +23,9 @@ public class ActionBuilder {
         // === 1. BEGIN PARSING ACTION DATA ===
         String name = (String) data.getOrDefault("name", "Unnamed Action");
         int power = ((Number) data.getOrDefault("power", 0)).intValue();
-        int trpCost = ((Number) data.getOrDefault("trpCost", 0)).intValue();
+        int trpCost = ((Number) data.getOrDefault("trpCost", 0)).intValue();  // this is a GAIN value for physicals
+        int mgGainOrCost = ((Number) data.getOrDefault("mgGainOrCost", 0)).intValue();
+
         String flavorOnUse = (String) data.getOrDefault("flavorOnUse", "");
 
         String targeting = (String) data.getOrDefault("targeting", "SINGLE");
@@ -37,7 +39,7 @@ public class ActionBuilder {
 
         // === 2. BUILD THE ACTION INSTANCE ===
         Action action = switch (type.toUpperCase(Locale.ROOT)) {
-            case "PHYSICAL_BASIC", "WEAPON" -> new BasicPhysicalAction(name, power, trpCost, flavorOnUse,
+            case "PHYSICAL_BASIC", "WEAPON" -> new BasicPhysicalAction(name, power, trpCost, mgGainOrCost, flavorOnUse,
                     TargetingMode.valueOf(targeting), AttackRangeKind.valueOf(rangeKind), aoeDmgMul, aoeEffMul, aoeEffects);
             case "WEAVE" -> new WeaveAction(name, power, trpCost, flavorOnUse,
                     TargetingMode.valueOf(targeting), AttackRangeKind.valueOf(rangeKind), aoeDmgMul, aoeEffMul, aoeEffects);

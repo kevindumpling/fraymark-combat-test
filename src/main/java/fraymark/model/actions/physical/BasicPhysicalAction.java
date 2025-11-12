@@ -19,6 +19,7 @@ public class BasicPhysicalAction implements Action {
     protected final List<EffectDescriptor> effectBundle = new ArrayList<>();
     private final String flavorOnUse;
     private final int trpGain;
+    private final int mgGainOrCost;
 
     private final TargetingMode targeting;
     private final AttackRangeKind rangeKind;
@@ -26,12 +27,13 @@ public class BasicPhysicalAction implements Action {
     private final double aoeEffectMultiplier;      // default 1.0
     private final List<EffectDescriptor> aoeEffectBundle;   // default empty
 
-    public BasicPhysicalAction(String name, int power, int trpGain, String flavorOnUse, TargetingMode targeting, AttackRangeKind rangeKind,
+    public BasicPhysicalAction(String name, int power, int trpGain, int mgGainOrCost, String flavorOnUse, TargetingMode targeting, AttackRangeKind rangeKind,
                                double aoeDamageMultiplier, double aoeEffectMultiplier, List<EffectDescriptor> aoeEffectBundle) {
         this.name = name;
         this.power = power;
         this.flavorOnUse  = flavorOnUse;
         this.trpGain = trpGain;
+        this.mgGainOrCost = mgGainOrCost;
 
         this.targeting = targeting;
         this.rangeKind =  rangeKind;
@@ -45,7 +47,10 @@ public class BasicPhysicalAction implements Action {
     @Override public int getTrpCost() { return 0; }
 
     @Override
-    public boolean canUse(Combatant user) { return true; }
+    public boolean canUse(Combatant user) {
+        if (this.mgGainOrCost >= 0){ return true; }
+        return user.getResources().getMg() >= this.mgGainOrCost;
+    }
 
     @Override
     public ActionResult execute(ActionContext context) {
@@ -53,6 +58,11 @@ public class BasicPhysicalAction implements Action {
         List<Combatant> targets = context.targets();
         List<CombatEvent> events = new ArrayList<>();
 
+        // Give all benefits to the user.
+        user.getResources().setTrp(user.getResources().getTrp() + this.trpGain);
+        user.getResources().setMg(user.getResources().getMg() + this.mgGainOrCost);
+
+        // Deal the effect.
         for (int i = 0; i < targets.size(); i++) {
             Combatant t = targets.get(i);
             boolean primary = (i == 0);
