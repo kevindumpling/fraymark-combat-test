@@ -4,8 +4,10 @@
     "type":"WEAVE",
     "name": "Alpha Burst",
     "power": 60,
-    "trpCost": 1,
+    "trpCost": 2,
     "effects": ["BURN"],
+    "targeting": "SINGLE",
+    "rangeKind": "ALL",
     "description": "A focused burst of kinetic energy that scorches armor plating."
   },
   {
@@ -13,8 +15,12 @@
     "type": "WEAVE",
     "name": "Theta Guard",
     "power": 0,
-    "trpCost": 2,
-    "effects": ["DEF_UP"],
-    "description": "Generates a resilient field of energy around the user."
+    "trpCost": 1,
+    "effects": [
+      {"type": "RES_DOWN", "name": "Demotivation", "magnitude":  1, "duration":  3}
+    ],
+    "description": "Generates a resilient field of energy around the user.",
+
+    "flavorOnUse": "A resilient field of energy appeared!"
   }
 ]

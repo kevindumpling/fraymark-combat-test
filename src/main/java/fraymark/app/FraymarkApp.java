@@ -36,7 +36,7 @@ public class FraymarkApp extends Application {
         pipeline.addHandler(new ApplyDamageHandler()); // last stage
 
         // Hook up resolvers and engine.
-        EffectResolver resolver = new EffectResolver();
+        EffectResolver resolver = new EffectResolver(bus);
         BattleEngine engine = new BattleEngine(bus, pipeline, resolver);
 
         // Set up screen and show.
@@ -50,7 +50,6 @@ public class FraymarkApp extends Application {
         Stats stats = new Stats(200, 50, 40, 55, 35, 20);
         Resources res = new Resources(200, 0, 0, 0, 0);
         PlayerCharacter sam = new PlayerCharacter("sam", "Sam", stats, res, false);
-        sam.addAction(new BasicPhysicalAction("Punch", 40));
         return sam;
     }
 
