@@ -16,33 +16,33 @@ public class CharacterFactory {
         register("PLAYER", data -> {
             String id = (String) data.get("id");
             String name = (String) data.getOrDefault("name", "Unnamed Player");
-            boolean armored = Boolean.TRUE.equals(data.get("armored"));
             int maxHP = ((Number) data.getOrDefault("maxHP", 100)).intValue();
             int atk = ((Number) data.getOrDefault("atk", 10)).intValue();
             int def = ((Number) data.getOrDefault("def", 10)).intValue();
             int wil = ((Number) data.getOrDefault("wil", 10)).intValue();
             int res = ((Number) data.getOrDefault("res", 10)).intValue();
             int spd = ((Number) data.getOrDefault("spd", 10)).intValue();
+            int armorAmount = ((Number) data.getOrDefault("armorAmount", 0)).intValue();
 
-            Stats s = new Stats(maxHP, atk, def, wil, res, spd);
-            Resources r = new Resources(maxHP, 0, 0, 0, 0);
-            return new PlayerCharacter(id, name, s, r, armored);
+            Stats s = new Stats(maxHP, atk, def, wil, res, spd, armorAmount);
+            Resources r = new Resources(maxHP, 0, 0, 0, armorAmount);
+            return new PlayerCharacter(id, name, s, r);
         });
 
         register("ENEMY", data -> {
             String id = (String) data.get("id");
             String name = (String) data.getOrDefault("name", "Unnamed Enemy");
-            boolean armored = Boolean.TRUE.equals(data.get("armored"));
             int maxHP = ((Number) data.getOrDefault("maxHP", 100)).intValue();
             int atk = ((Number) data.getOrDefault("atk", 10)).intValue();
             int def = ((Number) data.getOrDefault("def", 10)).intValue();
             int wil = ((Number) data.getOrDefault("wil", 10)).intValue();
             int res = ((Number) data.getOrDefault("res", 10)).intValue();
             int spd = ((Number) data.getOrDefault("spd", 10)).intValue();
+            int armorAmount = ((Number) data.getOrDefault("armorAmount", 0)).intValue();
 
-            Stats s = new Stats(maxHP, atk, def, wil, res, spd);
-            Resources r = new Resources(maxHP, 0, 0, 0, 0);
-            return new Enemy(id, name, s, r, armored, 1);
+            Stats s = new Stats(maxHP, atk, def, wil, res, spd, armorAmount);
+            Resources r = new Resources(maxHP, 0, 0, 0, armorAmount);
+            return new Enemy(id, name, s, r, 1);
         });
     }
 

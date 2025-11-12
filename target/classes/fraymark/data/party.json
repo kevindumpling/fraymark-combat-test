@@ -8,7 +8,7 @@
     "def": 40,
     "wil": 55,
     "res": 35,
-    "armored": false,
+    "armorAmount": 0,
     "actions": ["alpha_burst", "quick_lunge"],
     "weapon": "knife_basic"
   },
@@ -21,7 +21,7 @@
     "def": 25,
     "wil": 70,
     "res": 60,
-    "armored": false,
+    "armorAmount": 0,
     "actions": ["theta_guard", "punch"],
     "weapon": "pistol_standard"
   }

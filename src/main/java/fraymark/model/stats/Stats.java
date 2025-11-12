@@ -18,14 +18,16 @@ public class Stats {
     private int wil;
     private int res;
     private int spd;
+    private int maxArmor;
 
-    public Stats(int maxHP, int atk, int def, int wil, int res, int spd) {
+    public Stats(int maxHP, int atk, int def, int wil, int res, int spd, int maxArmor) {
         this.maxHP = maxHP;
         this.atk = atk;
         this.def = def;
         this.wil = wil;
         this.res = res;
         this.spd = spd;
+        this.maxArmor = maxArmor;
     }
 
     public int getMaxHP() { return maxHP; }
@@ -34,11 +36,13 @@ public class Stats {
     public int getWil() { return wil; }
     public int getRes() { return res; }
     public int getSpd() { return spd; }
+    public int getMaxArmor() { return maxArmor; }
 
     public void setAtk(int atk) { this.atk = atk ; }
     public void setDef(int def) { this.def = def; }
     public void setWil(int wil) { this.wil = wil ; }
     public void setRes(int res) { this.res = res; }
     public void setSpd(int spd) { this.spd = spd ; }
+    public void sedMaxArmor(int arm) { this.maxArmor = arm ; }
 
 }

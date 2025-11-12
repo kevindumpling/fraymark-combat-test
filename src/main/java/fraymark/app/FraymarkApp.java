@@ -39,9 +39,9 @@ public class FraymarkApp extends Application {
         pipeline.addHandler(new ArmorHandler());
 
         // special behavior
-        pipeline.addHandler(new ExecutionHandler());
         pipeline.addHandler(new CounterHandler());
         pipeline.addHandler(new InterruptHandler(bus));
+        pipeline.addHandler(new ExecutionHandler());
 
         pipeline.addHandler(new ApplyDamageHandler()); // last stage
 
@@ -56,18 +56,6 @@ public class FraymarkApp extends Application {
         stage.show();
     }
 
-    private Combatant buildPlayer() {
-        Stats stats = new Stats(200, 50, 40, 55, 35, 20);
-        Resources res = new Resources(200, 0, 0, 0, 0);
-        PlayerCharacter sam = new PlayerCharacter("sam", "Sam", stats, res, false);
-        return sam;
-    }
-
-    private Combatant buildEnemy() {
-        Stats stats = new Stats(150, 45, 35, 20, 20, 20);
-        Resources res = new Resources(150, 0, 0, 0, 0);
-        return new Enemy("goon", "Unarmored Goon", stats, res, false, 1);
-    }
 
     public static void main(String[] args) {
         launch(args);

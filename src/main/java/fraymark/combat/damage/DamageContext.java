@@ -25,6 +25,7 @@ public class DamageContext {
     private double mgGainMultiplier = 1.0;
     private double defBypassPct = 0.0;
     private int defBypassFlat = 0;
+    private boolean executed = false;
 
     public DamageContext(Combatant source, Combatant target, double basePower, Action action, EventBus bus) {
         this.source = source;
@@ -68,4 +69,10 @@ public class DamageContext {
     public double getMgGainMultiplier() {
         return this.mgGainMultiplier;
     }
+
+    public double getDefBypassPct() { return defBypassPct; }
+    public int getDefBypassFlat() { return defBypassFlat; }
+
+    public void markExecuted() { this.executed = true; this.cancel(); }
+    public boolean wasExecuted() { return executed; }
 }

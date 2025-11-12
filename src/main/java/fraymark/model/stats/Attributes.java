@@ -21,8 +21,8 @@ public class Attributes {
                 get("DEF"),
                 get("WIL"),
                 get("RES"),
-                get("SPD")
-
+                get("SPD"),
+                get("armorAmount")
         );
     }
 }

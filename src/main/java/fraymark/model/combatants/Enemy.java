@@ -9,8 +9,8 @@ import fraymark.model.stats.Resources;
 public class Enemy extends Combatant {
     private int aiLevel;
 
-    public Enemy(String id, String name, Stats stats, Resources res, boolean armored, int aiLevel) {
-        super(id, name, stats, res, armored, false);
+    public Enemy(String id, String name, Stats stats, Resources res, int aiLevel) {
+        super(id, name, stats, res, false);
         this.aiLevel = aiLevel;
     }
 

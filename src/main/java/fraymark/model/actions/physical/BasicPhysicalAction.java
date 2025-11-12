@@ -29,9 +29,10 @@ public class BasicPhysicalAction implements Physical {
 
     private final MomentumProfile momentumProfile;     // nullable
     private final CloseRangeProfile closeRangeProfile; // nullable
+    private final ExecutionProfile executionProfile; // nullable
 
     public BasicPhysicalAction(String name, int power, int trpGain, int mgGainOrCost, MomentumProfile momentumProfile, CloseRangeProfile closeRangeProfile,
-                               String flavorOnUse,
+                               ExecutionProfile executionProfile, String flavorOnUse,
                                TargetingMode targeting, AttackRangeKind rangeKind,
                                double aoeDamageMultiplier, double aoeEffectMultiplier, List<EffectDescriptor> aoeEffectBundle) {
         this.name = name;
@@ -48,6 +49,7 @@ public class BasicPhysicalAction implements Physical {
 
         this.momentumProfile = momentumProfile;
         this.closeRangeProfile = closeRangeProfile;
+        this.executionProfile = executionProfile;
     }
 
     @Override public String getName() { return name; }
@@ -113,5 +115,6 @@ public class BasicPhysicalAction implements Physical {
     public int getMgGain() { return this.mgGainOrCost; }
     @Override public MomentumProfile getMomentumProfile() { return momentumProfile; }
     @Override public CloseRangeProfile getCloseRangeProfile() { return closeRangeProfile; }
+    @Override public ExecutionProfile getExecutionProfile() { return executionProfile; }
 
 }
