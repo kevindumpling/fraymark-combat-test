@@ -23,8 +23,13 @@ public class DamageContext {
     private boolean targetIsClose = false;
     private int baseMgGain = 0;
     private double mgGainMultiplier = 1.0;
+
     private double defBypassPct = 0.0;
     private int defBypassFlat = 0;
+    private double resBypassPct = 0.0;
+    private int    resBypassFlat = 0;
+    private double barrierIgnorePct = 0.0;
+
     private boolean executed = false;
 
     public DamageContext(Combatant source, Combatant target, double basePower, Action action, EventBus bus) {
@@ -75,4 +80,13 @@ public class DamageContext {
 
     public void markExecuted() { this.executed = true; this.cancel(); }
     public boolean wasExecuted() { return executed; }
+
+
+    public void withResBypassPct(double pct){ this.resBypassPct = pct; }
+    public void withResBypassFlat(int flat){ this.resBypassFlat = flat; }
+    public void withBarrierIgnorePct(double pct){ this.barrierIgnorePct = pct; }
+
+    public double getResBypassPct(){ return resBypassPct; }
+    public int getResBypassFlat(){ return resBypassFlat; }
+    public double getBarrierIgnorePct(){ return barrierIgnorePct; }
 }

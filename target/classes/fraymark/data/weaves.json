@@ -3,9 +3,11 @@
     "id": "alpha_burst",
     "type":"WEAVE",
     "name": "Alpha Burst",
+    "school": "ALPHA",
     "power": 60,
     "trpCost": 2,
     "effects": ["BURN"],
+    "resBypassPct": 1.0,
     "targeting": "SINGLE",
     "rangeKind": "ALL",
     "description": "A focused burst of kinetic energy that scorches armor plating."
@@ -14,6 +16,7 @@
     "id": "theta_guard",
     "type": "WEAVE",
     "name": "Theta Guard",
+    "school": "THETA",
     "power": 0,
     "trpCost": 1,
     "effects": [

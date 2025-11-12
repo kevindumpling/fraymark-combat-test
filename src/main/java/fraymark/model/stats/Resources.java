@@ -2,7 +2,9 @@ package fraymark.model.stats;
 
 import javafx.animation.Animation;
 import javafx.animation.Timeline;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.animation.KeyFrame;
 import javafx.util.Duration;
@@ -13,16 +15,16 @@ import java.util.function.BiConsumer;
 /***
  * The Resources class contains all the information about a Combatant's resources, such as: <br>
  * - current HP <br>
- * - TRP (Threading Point) amount <br>
- * - MG (Momentum Gauge) amount <br>
- * - Instability amount <br>
- * - Barrier (damage protection) amount <br>
+ * - TRP (Threading Point) amount, from 0-any int <br>
+ * - MG (Momentum Gauge) amount, from 0-100 <br>
+ * - Instability amount from 0-100 <br>
+ * - Barrier (damage protection) amount as a percent from 0.0 to 0.1 <br>
  */
 public class Resources {
     private final IntegerProperty hp = new SimpleIntegerProperty();
     private final IntegerProperty mg = new SimpleIntegerProperty();
     private final IntegerProperty trp = new SimpleIntegerProperty();
-    private final IntegerProperty barrier = new SimpleIntegerProperty();
+    private final DoubleProperty barrier = new SimpleDoubleProperty();
     private final IntegerProperty focus = new SimpleIntegerProperty();
     private final IntegerProperty armorAmount = new SimpleIntegerProperty();
 
@@ -35,7 +37,7 @@ public class Resources {
     private transient Timeline hpRoller;  // timeline for HP rolling that runs on UI thread
     private double rollCarry = 0.0;  // fractional accumulator for rolling HP
 
-    public Resources(int hp, int mg, int trp, int barrier, int armorAmount) {
+    public Resources(int hp, int mg, int trp, double barrier, int armorAmount) {
         this.hp.set(hp);
         this.mg.set(mg);
         this.trp.set(trp);
@@ -118,10 +120,10 @@ public class Resources {
     public IntegerProperty trpProperty() { return trp; }
 
     // === Barrier ===
-    public int getBarrier() { return barrier.get(); }
+    public double getBarrier() { return barrier.get(); }
     public void setBarrier(int value) { barrier.set(value); }
 
-    public IntegerProperty barrierProperty() { return barrier; }
+    public DoubleProperty barrierProperty() { return barrier; }
 
     // === Armor ===
     public int getArmorAmount() { return armorAmount.get(); }

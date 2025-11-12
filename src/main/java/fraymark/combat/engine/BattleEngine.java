@@ -97,7 +97,11 @@ public class BattleEngine {
                         .withRangeKind(action.getRangeKind())
                         .withTargetIsClose(isClose)
                         .withBaseMgGain(baseMg);
-
+                if (action instanceof fraymark.model.actions.weaves.Weave wa) {
+                    dctx.withBarrierIgnorePct(wa.getBarrierIgnorePct());
+                    dctx.withResBypassPct(wa.getResBypassPct());
+                    dctx.withResBypassFlat(wa.getResBypassFlat());
+                }
                 pipeline.process(dctx); // ApplyDamageHandler updates HP
             }
         }

@@ -5,6 +5,7 @@ import fraymark.model.actions.physical.BasicPhysicalAction;
 import fraymark.model.actions.physical.CloseRangeProfile;
 import fraymark.model.actions.physical.ExecutionProfile;
 import fraymark.model.actions.weaves.WeaveAction;
+import fraymark.model.actions.weaves.WeaveSchool;
 import fraymark.model.effects.EffectDescriptor;
 import fraymark.model.effects.factory.EffectFactory;
 
@@ -26,7 +27,12 @@ public class ActionBuilder {
         // === 1. BEGIN PARSING ACTION DATA ===
         String name = (String) data.getOrDefault("name", "Unnamed Action");
         int power = ((Number) data.getOrDefault("power", 0)).intValue();
+        String schoolStr = (String) data.getOrDefault("school", "ALPHA");
         int trpCost = ((Number) data.getOrDefault("trpCost", 0)).intValue();  // this is a GAIN value for physicals
+        double barrierIgnorePct = ((Number)data.getOrDefault("barrierIgnorePct", 0.0)).doubleValue();  // weave only
+        double resBypassPct  = ((Number)data.getOrDefault("resBypassPct", 0.0)).doubleValue(); // weave only
+        int    resBypassFlat = ((Number)data.getOrDefault("resBypassFlat", 0)).intValue(); // weave only
+
         int mgGainOrCost = ((Number) data.getOrDefault("mgGainOrCost", 0)).intValue();
         String flavorOnUse = (String) data.getOrDefault("flavorOnUse", "");
         MomentumProfile momentumProfile = this.parseMomentumProfile(data);
@@ -48,7 +54,8 @@ public class ActionBuilder {
             case "PHYSICAL_BASIC", "WEAPON" -> new BasicPhysicalAction(name, power, trpCost, mgGainOrCost, momentumProfile, closeRangeProfile, executionProfile,
                     flavorOnUse,
                     TargetingMode.valueOf(targeting), AttackRangeKind.valueOf(rangeKind), aoeDmgMul, aoeEffMul, aoeEffects);
-            case "WEAVE" -> new WeaveAction(name, power, trpCost, flavorOnUse,
+            case "WEAVE" -> new WeaveAction(name, WeaveSchool.valueOf(schoolStr), power, trpCost, flavorOnUse,barrierIgnorePct,
+                    resBypassPct, resBypassFlat,
                     TargetingMode.valueOf(targeting), AttackRangeKind.valueOf(rangeKind), aoeDmgMul, aoeEffMul, aoeEffects);
             default -> throw new IllegalArgumentException("Unknown action type: " + type);
         };

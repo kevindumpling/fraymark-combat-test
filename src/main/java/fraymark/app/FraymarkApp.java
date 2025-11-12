@@ -38,6 +38,7 @@ public class FraymarkApp extends Application {
         pipeline.addHandler(new BarrierHandler());  // damage absorbption via shielding
         pipeline.addHandler(new ArmorHandler());  // damage to armorAmount goes here
         pipeline.addHandler(new DefenseHandler());
+        pipeline.addHandler(new ResHandler());
 
         // special behavior
         pipeline.addHandler(new CounterHandler());
