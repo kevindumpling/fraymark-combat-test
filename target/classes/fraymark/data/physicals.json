@@ -6,7 +6,10 @@
     "power": 60,
     "trpCost": 0,
     "effects":  [],
-    "description": "A punch."
+    "description": "A punch.",
+
+    "targeting": "AOE_TIER",
+    "rangeKind": "RANGED"
   },
   {
     "id": "quick_lunge",

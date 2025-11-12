@@ -24,6 +24,7 @@ public class Resources {
     private final IntegerProperty trp = new SimpleIntegerProperty();
     private final IntegerProperty barrier = new SimpleIntegerProperty();
     private final IntegerProperty focus = new SimpleIntegerProperty();
+    private int defaultMgLoss = 10;  // The amount of MG that is lost by default on choosing a non-physical action.
 
     // stats for rolling HP
     private int pendingHpLoss = 0;                // queued damage not yet applied
@@ -98,6 +99,9 @@ public class Resources {
     public int getMg() { return mg.get(); }
     public void setMg(int value) { mg.set(value); }
     public IntegerProperty mgProperty() { return mg; }
+    public int getDefaultMgLoss() { return this.defaultMgLoss; }
+    public void setDefaultMgLoss(int loss) { this.defaultMgLoss = loss; }
+
 
     // === TRP ===
     public int getTrp() { return trp.get(); }
