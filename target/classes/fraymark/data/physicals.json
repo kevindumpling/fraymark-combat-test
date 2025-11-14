@@ -35,18 +35,13 @@
     "name": "Reverse Slash",
     "power": 60,
     "trpCost": 2,
-    "effects": [
-  {"type": "RES_DOWN", "name": "Demotivation", "magnitude":  1, "duration":  3}
-],
+    "effects": ["res_down"],
     "description": "A slash.",
     "flavorOnUse": "A Gwima Blast appeared!",
 
     "targeting": "AOE_TIER",
     "rangeKind": "ALL",
     "aoeEffectMultiplier": 0.5,
-    "aoeDamageMultiplier": 0.5,
-    "aoeEffects": [
-  {"type": "RES_DOWN", "name": "Weak Demotivation", "magnitude":  1, "duration":  1}
-  ]
+    "aoeDamageMultiplier": 0.5
   }
 ]

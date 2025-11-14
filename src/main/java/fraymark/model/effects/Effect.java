@@ -8,10 +8,33 @@ import fraymark.model.combatants.Combatant;
  */
 public interface Effect {
 
+    /**
+     * Any damage per turn behavior goes here.
+     * @param source
+     * @param target
+     * @return amount of damage
+     */
+    default int periodicDamage(Combatant source, Combatant target) {
+        return 0;
+    }
+
+    /** Optional: custom message for periodic damage. */
+    default String periodicDamageMessage(Combatant source, Combatant target, int amount) {
+        return target.getName() + " takes " + amount + " damage from " + getName() + "!";
+    }
+
     void onApply(Combatant target);
 
+    /***
+     * Any non-damage per turn things go here.
+     * @param target
+     */
     void onTurnStart(Combatant target);
 
+    /***
+     * Any non-damage per turn things go here.
+     * @param target
+     */
     void onTurnEnd(Combatant target);
 
     String getName();

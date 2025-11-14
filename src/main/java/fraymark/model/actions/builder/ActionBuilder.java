@@ -64,53 +64,50 @@ public class ActionBuilder {
             default -> throw new IllegalArgumentException("Unknown action type: " + type);
         };
 
-        // Parse optional effects: a list of objects like
-        //    { "type": "BLEED", "magnitude": 6, "duration": 2, "name": "Frostbite" }
-        Object rawEffects = data.get("effects");
-        if (rawEffects instanceof List<?> list && !list.isEmpty()) {
-            for (Object o : list) {
-                if (!(o instanceof Map)) {
-                    System.err.println("Skipping effect entry (not an object): " + o);
-                    continue;
-                }
-                Map<String, Object> eData = (Map<String, Object>) o;
-                String eType = (String) eData.get("type");
-                if (eType == null || eType.isBlank()) {
-                    System.err.println("Skipping effect entry (missing 'type'): " + eData);
-                    continue;
-                }
+        attachEffectsToAction(action, data);  // attatch any effects that the action may have.
 
-                // create a descriptor with parameters (no src/tgt yet)
-                EffectDescriptor desc = effectFactory.descriptor(eType, eData);
 
-                // attach to the action (requires an adder on the concrete action)
-                if (action instanceof WeaveAction wa) {
-                    wa.addEffectDescriptor(desc);
-                } else if (action instanceof BasicPhysicalAction pa) {
-                    pa.addEffectDescriptor(desc);
-                } else {
-                    // If you add more Action types later, handle them here
-                    System.err.println("Action type lacks effectBundle adder: " + action.getClass());
-                }
-            }
-        }
 
         return action;
     }
 
-    private List<EffectDescriptor>parseAoeEffects(Map<String, Object> data){
+    private List<EffectDescriptor> parseAoeEffects(Map<String, Object> data) {
         List<EffectDescriptor> aoeEffects = new ArrayList<>();
-        Object rawAoe = data.get("aoeEffects");
-        if (rawAoe instanceof List<?> list) {
-            for (Object o : list) {
-                if (o instanceof Map<?,?> m) {
+        Object raw = data.get("aoeEffects");
+        if (!(raw instanceof List<?> list)) return aoeEffects;
+
+        for (Object o : list) {
+            EffectDescriptor desc = null;
+
+            if (o instanceof String id) {
+                // ID-based AoE effect
+                desc = effectFactory.descriptorFromId(id);
+
+            } else if (o instanceof Map<?,?> mRaw) {
+                Map<String, Object> m = (Map<String, Object>) mRaw;
+                String id = (String) m.get("id");
+                if (id != null) {
+                    Map<String, Object> overrides = new HashMap<>(m);
+                    overrides.remove("id");
+                    desc = effectFactory.descriptorFromId(id, overrides);
+                } else {
                     String t = (String) m.get("type");
                     if (t != null) {
-                        aoeEffects.add(effectFactory.descriptor(t, (Map<String,Object>) m));
+                        // Legacy inline AoE effect definition
+                        desc = effectFactory.descriptor(t, m);
+                    } else {
+                        System.err.println("AoE effect entry missing 'type' and 'id': " + m);
                     }
                 }
+            } else {
+                System.err.println("Skipping aoeEffect entry (neither String nor Map): " + o);
+            }
+
+            if (desc != null) {
+                aoeEffects.add(desc);
             }
         }
+
         return aoeEffects;
     }
 
@@ -170,6 +167,61 @@ public class ActionBuilder {
             scaleProfile = new TrpScalingProfile(per, cap, min, max);
         }
         return scaleProfile;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void attachEffectsToAction(Action action, Map<String, Object> data) {
+        Object rawEffects = data.get("effects");
+        if (!(rawEffects instanceof List<?> list) || list.isEmpty()) return;
+
+        List<EffectDescriptor> descriptors = new ArrayList<>();
+
+        for (Object o : list) {
+            EffectDescriptor desc = null;
+
+            if (o instanceof String id) {
+                // e.g. "burn"
+                desc = effectFactory.descriptorFromId(id);
+
+            } else if (o instanceof Map<?, ?> mRaw) {
+                Map<String, Object> m = (Map<String, Object>) mRaw;
+
+                // if an id is present, treat as overrides of a base template
+                String id = (String) m.get("id");
+                if (id != null) {
+                    // remove 'id' from overrides so it doesn't mask the template id
+                    Map<String, Object> overrides = new HashMap<>(m);
+                    overrides.remove("id");
+                    desc = effectFactory.descriptorFromId(id, overrides);
+                } else {
+                    // pure inline definition (legacy / special cases)
+                    String type = (String) m.get("type");
+                    if (type == null) {
+                        System.err.println("Effect entry missing 'type': " + m);
+                    } else {
+                        desc = effectFactory.descriptor(type, m);
+                    }
+                }
+            } else {
+                System.err.println("Skipping effect entry (neither String nor Map): " + o);
+            }
+
+            if (desc != null) {
+                descriptors.add(desc);
+            }
+        }
+
+        if (action instanceof WeaveAction wa) {
+            for (EffectDescriptor desc : descriptors) {
+                wa.addEffectDescriptor(desc);
+            }
+        } else if (action instanceof BasicPhysicalAction pa) {
+            for (EffectDescriptor desc : descriptors) {
+                pa.addEffectDescriptor(desc);
+            }
+        } else {
+            System.err.println("Action type lacks effectBundle adder: " + action.getClass());
+        }
     }
 
     private static double toDouble(Object v, double d) {

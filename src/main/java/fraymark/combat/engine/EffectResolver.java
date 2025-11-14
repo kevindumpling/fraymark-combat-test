@@ -4,7 +4,7 @@ package fraymark.combat.engine;
 import fraymark.combat.events.EventBus;
 import fraymark.model.combatants.Combatant;
 import fraymark.model.effects.*;
-
+import fraymark.combat.events.*;
 import java.util.*;
 
 public class EffectResolver {
@@ -13,7 +13,7 @@ public class EffectResolver {
 
     public EffectResolver(EventBus bus) { this.bus = bus; }
 
-    public void apply(Combatant target, Effect e) {
+    public void apply(Combatant source, Combatant target, Effect e) {
         var list = active.computeIfAbsent(target, k -> new ArrayList<>());
 
         Optional<EffectInstance> sameKey = list.stream()
@@ -31,7 +31,7 @@ public class EffectResolver {
                 case REPLACE_IF_STRONGER -> {
                     cur.expire(target, bus, ExpireReason.OVERWRITTEN);
                     list.remove(cur);
-                    var ni = new EffectInstance(e);
+                    var ni = new EffectInstance(e, source);
                     list.add(ni);
                     ni.apply(target);
                     refreshRollRate(target);
@@ -44,8 +44,7 @@ public class EffectResolver {
             return;
         }
 
-        // brand new
-        var inst = new EffectInstance(e);
+        var inst = new EffectInstance(e, source);
         list.add(inst);
         inst.apply(target);
         refreshRollRate(target);
@@ -60,22 +59,49 @@ public class EffectResolver {
         }
     }
 
-    public void onTurnEnd(Collection<Combatant> targets) {
+    public List<CombatEvent> generateDotEvents(Collection<Combatant> targets) {
+        List<CombatEvent> out = new ArrayList<>();
+
         for (var t : targets) {
             var list = active.get(t);
-            if (list == null) continue;
+            if (list == null || list.isEmpty()) continue;
 
-            // 1) per-turn hooks
+            // Per-turn hooks (non-damage behaviour)
             list.forEach(inst -> inst.end(t));
 
-            // 2) decrement & expire
+            // Periodic damage
+            for (var inst : list) {
+                var e   = inst.effect();
+                var src = inst.source();    // you added this earlier
+                int dmg = e.periodicDamage(src, t);
+                if (dmg > 0) {
+                    String msg = e.periodicDamageMessage(src, t, dmg);
+                    out.add(new CombatEvent(
+                            CombatEventType.DAMAGE,
+                            src,
+                            t,
+                            dmg,
+                            msg
+                    ));
+                }
+            }
+        }
+
+        return out;
+    }
+
+    public void finalizeEndOfTurn(Collection<Combatant> targets) {
+        for (var t : targets) {
+            var list = active.get(t);
+            if (list == null || list.isEmpty()) continue;
+
             var it = list.iterator();
             boolean changed = false;
             while (it.hasNext()) {
                 var inst = it.next();
                 if (inst.remaining() > 0) inst.decrement();
                 if (inst.remaining() == 0) {
-                    inst.expire(t, bus, ExpireReason.NATURAL);
+                    inst.expire(t, bus, ExpireReason.NATURAL); // logs fade here
                     it.remove();
                     changed = true;
                 }
@@ -83,6 +109,7 @@ public class EffectResolver {
             if (changed) refreshRollRate(t);
         }
     }
+
 
     private void refreshRollRate(Combatant t) {
         double mul = 1.0;
@@ -108,5 +135,25 @@ public class EffectResolver {
             }
         }
         if (changed) refreshRollRate(t);
+    }
+
+    public List<EffectInstance> getInstances(Combatant t) {
+        return active.getOrDefault(t, List.of());
+    }
+
+    public List<Effect> getEffects(Combatant t) {
+        var list = active.getOrDefault(t, List.of());
+        List<Effect> out = new ArrayList<>(list.size());
+        for (var inst : list) out.add(inst.effect());
+        return Collections.unmodifiableList(out);
+    }
+
+    public boolean hasEffectKey(Combatant t, String key) {
+        var list = active.get(t);
+        if (list == null) return false;
+        for (var inst : list) {
+            if (inst.effect().key().equals(key)) return true;
+        }
+        return false;
     }
 }

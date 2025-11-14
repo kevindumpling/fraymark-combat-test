@@ -1,19 +1,25 @@
 [
   {
     "id": "burn",
-    "type": "BURN",
-    "magnitude": 15,
+    "type": "SIMPLE",
+    "name": "Burn",
+    "effectType": "BURN",
+    "magnitude": 8,
     "duration": 3,
-    "description": "Deals burn damage over time."
+    "rollRateMultiplier": 1.0,
+    "stacking": "STACK_ADD"
   },
   {
     "id": "res_down",
-    "type": "RES_DOWN",
+    "type": "SIMPLE",
+    "name": "Weakness",
+    "effectType": "RES_DOWN",
     "magnitude": 10,
     "duration": 2,
     "description": "Reduces resistance temporarily."
   },
   {
+    "id": "bleed",
     "type": "SIMPLE",
     "name": "Bleed",
     "effectType": "BLEED",
@@ -23,6 +29,7 @@
     "stacking": "STACK_ADD"
   },
   {
+    "id": "shield",
     "type": "BARRIER",
     "name": "Shield",
     "pct": 0.30,

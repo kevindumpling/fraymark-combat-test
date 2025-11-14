@@ -6,14 +6,16 @@
     "school": "ALPHA",
     "power": 60,
     "trpCost": 2,
-    "effects": ["BURN"],
+    "effects": ["burn"],
     "resBypassPct": 0.9,
     "trpSpendMode": "VARIABLE",
-    "trpScalingProfile": {"perPointMul":  10, "capMul": 1000, "minExtra":  1, "maxExtra":  5},
+    "trpScalingProfile": {"perPointMul":  0.01, "capMul": 2, "minExtra":  0, "maxExtra":  5},
 
     "targeting": "AOE_TIER",
     "rangeKind": "ALL",
-    "description": "A focused burst of kinetic energy that scorches armor plating."
+    "description": "A focused burst of kinetic energy that scorches armor plating.",
+    "aoeEffects": ["burn"],
+    "aoeEffectMultiplier": 0.5
   },
   {
     "id": "theta_guard",
@@ -22,9 +24,7 @@
     "school": "THETA",
     "power": 0,
     "trpCost": 1,
-    "effects": [
-      {"type": "BLEED", "name": "Bleeding", "magnitude":  1, "duration":  3}
-    ],
+    "effects": ["bleed"],
     "description": "Generates a resilient field of energy around the user.",
     "flavorOnUse": "A resilient field of energy appeared!"
   }

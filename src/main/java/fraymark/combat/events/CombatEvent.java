@@ -53,6 +53,11 @@ public class CombatEvent {
         return new CombatEvent(CombatEventType.EFFECT_APPLIED, src, tgt, 0, msg, e);
     }
 
+    public static CombatEvent dotDamageEvent(Combatant src, Combatant tgt, int amount,
+                                        Effect effect, String message) {
+        return new CombatEvent(CombatEventType.DAMAGE, src, tgt, amount, message, effect);
+    }
+
     public Effect getEffect() {
         if (this.effect == null){ return null;}
 

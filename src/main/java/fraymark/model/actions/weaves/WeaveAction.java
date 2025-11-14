@@ -135,4 +135,5 @@ public class WeaveAction implements Weave {
     @Override public int getTrpBaseCost() { return trpBaseCost; }
     @Override public TrpSpendMode getTrpSpendMode() { return trpSpendMode; }
     @Override public TrpScalingProfile getTrpScalingProfile() { return trpScalingProfile; }
+
 }

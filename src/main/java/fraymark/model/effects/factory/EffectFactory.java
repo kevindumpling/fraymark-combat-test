@@ -12,6 +12,9 @@ public class EffectFactory {
     // type -> constructor(data) -> EffectDescriptor
     private final Map<String, Function<Map<String, Object>, EffectDescriptor>> registry = new HashMap<>();
 
+    // NEW: id -> raw data map (from effects.json)
+    private final Map<String, Map<String, Object>> templatesById = new HashMap<>();
+
     public EffectFactory() {
         // --- SIMPLE (generic) ---
         // JSON example:
@@ -35,12 +38,6 @@ public class EffectFactory {
             };
         });
 
-        // --- BLEED / BURN / DEF_DOWN / RES_DOWN convenience types (back-compat) ---
-        // Still available for your existing data files. They also accept optional rollRateMultiplier/stacking.
-        registerSimpleShortcut("BLEED",  "Bleed",      EffectType.BLEED,    5, 2);
-        registerSimpleShortcut("BURN",   "Burn",       EffectType.BURN,     4, 3);
-        registerSimpleShortcut("DEF_DOWN","Defense Down",EffectType.DEF_DOWN,10, 2);
-        registerSimpleShortcut("RES_DOWN","Resistance Down",EffectType.RES_DOWN,10, 2);
 
         // --- BARRIER timed buff ---
         // JSON example:
@@ -109,7 +106,7 @@ public class EffectFactory {
                         @Override public String key() { return "BARRIER:" + (int)(pct * 100); }
                     };
                 });
-                case "SIMPLE", "BLEED", "BURN", "DEF_DOWN", "RES_DOWN" -> {
+                case "SIMPLE" -> {
                     // For BLEED/BURN/DEF_DOWN/RES_DOWN without effectType, infer from type
                     register(type, data -> (src, tgt) -> {
                         String name = (String) data.getOrDefault("name", defaultName);
@@ -136,6 +133,41 @@ public class EffectFactory {
                 }
             }
         }
+    }
+
+    // Register a template from effects.json
+    public void registerTemplate(String id, Map<String, Object> data) {
+        if (id == null) return;
+        templatesById.put(id.toLowerCase(Locale.ROOT), new HashMap<>(data));
+    }
+
+    // Fetch a descriptor from an ID (no overrides)
+    public EffectDescriptor descriptorFromId(String id) {
+        return descriptorFromId(id, Collections.emptyMap());
+    }
+
+    // Fetch a descriptor from an ID with overrides (e.g. magnitude tweak)
+    public EffectDescriptor descriptorFromId(String id, Map<String, Object> overrides) {
+        if (id == null) return null;
+        Map<String, Object> base = templatesById.get(id.toLowerCase(Locale.ROOT));
+        if (base == null) {
+            System.err.println("No effect template found for id=" + id);
+            return null;
+        }
+
+        Map<String, Object> merged = new HashMap<>(base);
+        if (overrides != null) {
+            merged.putAll(overrides);
+        }
+
+        Object typeObj = merged.get("type");
+        if (!(typeObj instanceof String typeStr)) {
+            System.err.println("Effect template " + id + " missing 'type' in merged data: " + merged);
+            return null;
+        }
+
+        // Reuse your existing constructor registry
+        return descriptor(typeStr, merged);
     }
 
     /* ----------------- helpers ----------------- */

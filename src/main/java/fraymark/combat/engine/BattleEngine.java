@@ -9,6 +9,8 @@ import fraymark.combat.events.*;
 import fraymark.combat.damage.DamageContext;
 import fraymark.combat.damage.pipeline.DamagePipeline;
 import fraymark.model.position.DistanceTier;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -51,8 +53,7 @@ public class BattleEngine {
             ));
 
             // Still advance the turn
-            effects.onTurnEnd(state.getParty());
-            effects.onTurnEnd(state.getEnemies());
+            resolveEndOfTurn(state);
             state.nextTurn();
 
             return new ActionResult(List.of(
@@ -92,7 +93,7 @@ public class BattleEngine {
                 switch (ev.getType()) {
                     case EFFECT_APPLIED -> {
                         eventBus.publish(ev); // log first
-                        effects.apply(ev.getTarget(), ev.getEffect()); // actually apply
+                        effects.apply(ev.getSource(), ev.getTarget(), ev.getEffect()); // actually apply
                     }
                     default -> eventBus.publish(ev);
                 }
@@ -130,9 +131,7 @@ public class BattleEngine {
             }
         }
 
-        // Apply end-of-turn effects
-        effects.onTurnEnd(state.getParty());
-        effects.onTurnEnd(state.getEnemies());
+        resolveEndOfTurn(state);
 
         // Advance to next turn
         state.nextTurn();
@@ -143,6 +142,47 @@ public class BattleEngine {
         }
 
         return result;
+    }
+
+    private void resolveEndOfTurn(BattleState state){
+        // === End-of-turn phase 1: generate DoT damage events ===
+        List<CombatEvent> dotEvents = new ArrayList<>();
+        dotEvents.addAll(effects.generateDotEvents(state.getParty()));
+        dotEvents.addAll(effects.generateDotEvents(state.getEnemies()));
+
+        for (CombatEvent ev : dotEvents) {
+            System.out.println("DEBUG: DOT Event type=" + ev.getType() +
+                    " message=" + ev.getMessage() +
+                    " amount=" + ev.getAmount());
+
+            if (ev.getType() != CombatEventType.DAMAGE) {
+                eventBus.publish(ev);
+                continue;
+            }
+
+            boolean targetIsAlly = state.getParty().contains(ev.getTarget());
+            var lineup = targetIsAlly ? state.getPartyLineup() : state.getEnemyLineup();
+            boolean isClose = lineup.tierOf(ev.getTarget()) == DistanceTier.CLOSE;
+
+            DamageContext dctx = new DamageContext(
+                    ev.getSource(),
+                    ev.getTarget(),
+                    ev.getAmount(),
+                    null,          // no originating Action
+                    eventBus)
+                    .withRangeKind(AttackRangeKind.ALL)
+                    .withTargetIsClose(isClose)
+                    .withBaseMgGain(0);
+
+            // Optionally, if you want handlers to know this is DoT, add:
+            // dctx.setSourceEffect(ev.getEffect()); // if you stored it
+
+            pipeline.process(dctx);
+        }
+
+        // === End-of-turn phase 2: decrement duration & expire (fade logs) ===
+        effects.finalizeEndOfTurn(state.getParty());
+        effects.finalizeEndOfTurn(state.getEnemies());
     }
 
     /**
