@@ -160,7 +160,14 @@ public class ActionBuilder {
         if (scaleObj instanceof Map<?,?> m) {
             double per = toDouble(m.get("perPointMul"), 0.0);
             double cap = toDouble(m.get("capMul"), 0.0);
-            scaleProfile = new TrpScalingProfile(per, cap);
+
+            // Optional min/max TRP spends for VARIABLE weaves.
+            Object minObj = m.get("minExtra");
+            Object maxObj = m.get("maxExtra");
+            int min = (minObj instanceof Number n) ? n.intValue() : 0;
+            int max = (maxObj instanceof Number n) ? n.intValue() : Integer.MAX_VALUE;
+
+            scaleProfile = new TrpScalingProfile(per, cap, min, max);
         }
         return scaleProfile;
     }
