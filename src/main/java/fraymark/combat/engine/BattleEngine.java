@@ -2,13 +2,15 @@ package fraymark.combat.engine;
 
 import fraymark.model.actions.*;
 import fraymark.model.actions.physical.Physical;
+import fraymark.model.actions.weaves.Weave;
 import fraymark.model.actions.weaves.WeaveAction;
 import fraymark.model.combatants.Combatant;
 import fraymark.combat.events.*;
 import fraymark.combat.damage.DamageContext;
 import fraymark.combat.damage.pipeline.DamagePipeline;
 import fraymark.model.position.DistanceTier;
-
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 
 /**
@@ -19,6 +21,7 @@ public class BattleEngine {
     private final DamagePipeline pipeline;
     private final EffectResolver effects;
     private final StateMachine stateMachine = new StateMachine();
+    private final Map<String, Integer> trpOverrides = new HashMap<>();
 
     public BattleEngine(EventBus bus, DamagePipeline pipeline, EffectResolver resolver) {
         this.eventBus = bus;
@@ -74,7 +77,9 @@ public class BattleEngine {
         }
         ActionContext ctx = new ActionContext(actor, targets);
         ActionResult result = action.execute(ctx);
+        final int trpSnap = actor.getResources().getTrp();
 
+        int damageSeen = 0;
 
         // Process all events from the action
         for (CombatEvent ev : result.events()) {
@@ -84,8 +89,17 @@ public class BattleEngine {
                     " amount=" + ev.getAmount());
 
             if (ev.getType() != CombatEventType.DAMAGE) {
-                eventBus.publish(ev);  // Publish the event.
-            } else{
+                switch (ev.getType()) {
+                    case EFFECT_APPLIED -> {
+                        eventBus.publish(ev); // log first
+                        effects.apply(ev.getTarget(), ev.getEffect()); // actually apply
+                    }
+                    default -> eventBus.publish(ev);
+                }
+
+            } else {
+                boolean isPrimary = (damageSeen++ == 0);
+
                 boolean targetIsAlly = state.getParty().contains(ev.getTarget());
                 var lineup = targetIsAlly ? state.getPartyLineup() : state.getEnemyLineup();
                 boolean isClose = lineup.tierOf(ev.getTarget()) == DistanceTier.CLOSE;
@@ -97,10 +111,20 @@ public class BattleEngine {
                         .withRangeKind(action.getRangeKind())
                         .withTargetIsClose(isClose)
                         .withBaseMgGain(baseMg);
-                if (action instanceof fraymark.model.actions.weaves.Weave wa) {
+                if (action instanceof Weave wa) {
                     dctx.withBarrierIgnorePct(wa.getBarrierIgnorePct());
                     dctx.withResBypassPct(wa.getResBypassPct());
                     dctx.withResBypassFlat(wa.getResBypassFlat());
+                    dctx.withTrpSnapshot(trpSnap);
+
+                    // If UI chose TRP spend, lock it in here.
+                    Integer override = getTrpOverride(actor, wa);
+                    if (override != null && override > 0) {
+                        dctx.setTrpToSpend(override);
+                    }
+
+                    dctx.withPrimaryHit(isPrimary);
+
                 }
                 pipeline.process(dctx); // ApplyDamageHandler updates HP
             }
@@ -171,5 +195,20 @@ public class BattleEngine {
      */
     public TurnPhase getCurrentPhase() {
         return stateMachine.current();
+    }
+
+    private String trpKey(Combatant actor, Weave weave) {
+        return actor.getId() + "|" + weave.getName();
+    }
+
+    /** Called by UI before performAction for VARIABLE weaves. */
+    public void setTrpOverride(Combatant actor, Weave weave, int totalSpend) {
+        if (actor == null || weave == null) return;
+        trpOverrides.put(trpKey(actor, weave), Math.max(0, totalSpend));
+    }
+
+    /** Read (but do not remove) the override for this cast, if any. */
+    private Integer getTrpOverride(Combatant actor, Weave weave) {
+        return trpOverrides.get(trpKey(actor, weave));
     }
 }

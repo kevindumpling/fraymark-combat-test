@@ -4,6 +4,8 @@ import fraymark.model.actions.*;
 import fraymark.model.actions.physical.BasicPhysicalAction;
 import fraymark.model.actions.physical.CloseRangeProfile;
 import fraymark.model.actions.physical.ExecutionProfile;
+import fraymark.model.actions.weaves.TrpScalingProfile;
+import fraymark.model.actions.weaves.TrpSpendMode;
 import fraymark.model.actions.weaves.WeaveAction;
 import fraymark.model.actions.weaves.WeaveSchool;
 import fraymark.model.effects.EffectDescriptor;
@@ -32,6 +34,8 @@ public class ActionBuilder {
         double barrierIgnorePct = ((Number)data.getOrDefault("barrierIgnorePct", 0.0)).doubleValue();  // weave only
         double resBypassPct  = ((Number)data.getOrDefault("resBypassPct", 0.0)).doubleValue(); // weave only
         int    resBypassFlat = ((Number)data.getOrDefault("resBypassFlat", 0)).intValue(); // weave only
+        String spendModeStr = (String) data.getOrDefault("trpSpendMode", "FLAT");
+        TrpScalingProfile trpScalingProfile = this.parseTrpScalingProfile(data);
 
         int mgGainOrCost = ((Number) data.getOrDefault("mgGainOrCost", 0)).intValue();
         String flavorOnUse = (String) data.getOrDefault("flavorOnUse", "");
@@ -55,7 +59,7 @@ public class ActionBuilder {
                     flavorOnUse,
                     TargetingMode.valueOf(targeting), AttackRangeKind.valueOf(rangeKind), aoeDmgMul, aoeEffMul, aoeEffects);
             case "WEAVE" -> new WeaveAction(name, WeaveSchool.valueOf(schoolStr), power, trpCost, flavorOnUse,barrierIgnorePct,
-                    resBypassPct, resBypassFlat,
+                    resBypassPct, resBypassFlat, TrpSpendMode.valueOf(spendModeStr), trpScalingProfile,
                     TargetingMode.valueOf(targeting), AttackRangeKind.valueOf(rangeKind), aoeDmgMul, aoeEffMul, aoeEffects);
             default -> throw new IllegalArgumentException("Unknown action type: " + type);
         };
@@ -148,6 +152,22 @@ public class ActionBuilder {
 
         return exec;
 
+    }
+
+    private TrpScalingProfile parseTrpScalingProfile(Map<String, Object> data){
+        TrpScalingProfile scaleProfile = null;
+        Object scaleObj = data.get("trpScalingProfile");
+        if (scaleObj instanceof Map<?,?> m) {
+            double per = toDouble(m.get("perPointMul"), 0.0);
+            double cap = toDouble(m.get("capMul"), 0.0);
+            scaleProfile = new TrpScalingProfile(per, cap);
+        }
+        return scaleProfile;
+    }
+
+    private static double toDouble(Object v, double d) {
+        if (v instanceof Number n) return n.doubleValue();
+        try { return v != null ? Double.parseDouble(v.toString()) : d; } catch(Exception e) { return d; }
     }
 }
 

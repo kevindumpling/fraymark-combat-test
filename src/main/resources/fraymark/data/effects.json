@@ -12,5 +12,21 @@
     "magnitude": 10,
     "duration": 2,
     "description": "Reduces resistance temporarily."
+  },
+  {
+    "type": "SIMPLE",
+    "name": "Bleed",
+    "effectType": "BLEED",
+    "magnitude": 8,
+    "duration": 3,
+    "rollRateMultiplier": 1.75,
+    "stacking": "STACK_ADD"
+  },
+  {
+    "type": "BARRIER",
+    "name": "Shield",
+    "pct": 0.30,
+    "duration": 3,
+    "stacking": "REFRESH_DURATION"
   }
 ]

@@ -10,18 +10,19 @@ import static java.lang.Math.max;
 public class BarrierHandler implements DamageHandler {
     @Override
     public boolean handle(DamageContext ctx) {
-        double barrier = ctx.target().getResources().getBarrier();  // in pct. from 0.0-1.0.
-        double ignore = max(0, Math.min(1, ctx.getBarrierIgnorePct()));
-        double effectiveBarrier = barrier - ignore;
+        double barrier = ctx.target().getResources().getBarrier();     // 0..1
+        double ignore  = Math.max(0, Math.min(1, ctx.getBarrierIgnorePct()));
 
-        if (effectiveBarrier > 0) {
-            double absorbed = max(effectiveBarrier * ctx.finalDamage(), 0);
-            ctx.setFinalDamage((int)(ctx.finalDamage()*absorbed));
-            if (ctx.finalDamage() <= 0) {
-                ctx.cancel();
-                return true;
-            }
-        }
+        double effectiveBarrier = Math.max(0.0, Math.min(1.0, barrier - ignore));
+        if (effectiveBarrier <= 0) return false;
+
+        double in       = ctx.finalDamage();
+        double absorbed = in * effectiveBarrier;
+        double out      = in - absorbed;                    // ← keep the remainder
+
+        ctx.setFinalDamage(out);
+
+        if (out <= 0) { ctx.cancel(); return true; }
         return false;
     }
 }

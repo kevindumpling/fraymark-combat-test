@@ -1,6 +1,7 @@
 // src/main/java/fraymark/model/effects/SimpleEffect.java
 package fraymark.model.effects;
 
+import fraymark.combat.events.EventBus;
 import fraymark.model.combatants.Combatant;
 
 /***
@@ -10,66 +11,63 @@ public class SimpleEffect implements Effect {
     private final String name;
     private final EffectType type;
     private int magnitude;   // e.g., damage per tick or stat delta
-    private int remaining;         // duration in turns
+    private int initialDuration;         // duration in turns
 
-    public SimpleEffect(String name, EffectType type, int magnitude, int duration) {
+    public SimpleEffect(String name, EffectType type, int magnitude, int initialDuration) {
         this.name = name;
         this.type = type;
         this.magnitude = magnitude;
-        this.remaining = duration;
+        this.initialDuration = initialDuration;
     }
 
     @Override
     public void onApply(Combatant target) {
-        // one-time application (e.g., apply debuff immediately)
         switch (type) {
-            case DEF_DOWN -> target.getStats().setDef(target.getStats().getDef()-magnitude); // you may need a temp system
-            case RES_DOWN -> target.getStats().setRes(target.getStats().getRes()-magnitude);
-            default -> { /* no-op here */ }
+            case DEF_DOWN -> target.getStats().setDef(target.getStats().getDef() - magnitude);
+            case RES_DOWN -> target.getStats().setRes(target.getStats().getRes() - magnitude);
+            default -> {}
         }
     }
 
     @Override
     public void onTurnStart(Combatant target) {
-        // Start-of-turn effects (e.g., STUN could be handled here if supported)
+
     }
 
     @Override
     public void onTurnEnd(Combatant target) {
-        // Periodic ticks
         switch (type) {
-            case BLEED, BURN -> {
-                int hp = target.getResources().getHp();
-                int newHp = Math.max(0, hp - magnitude);
-                target.getResources().setHp(newHp);
-            }
-            default -> { /* no periodic tick */ }
+            case BLEED, BURN -> target.getResources().enqueueRollingDamage(Math.max(0, magnitude));
+            default -> {}
         }
-        remaining = Math.max(0, remaining - 1);
-
-        // On final turn, revert temp stat mods
-        if (remaining == 0) {
-            switch (type) {
-                case DEF_DOWN -> target.getStats().setDef(target.getStats().getDef()+magnitude);
-                case RES_DOWN -> target.getStats().setRes(target.getStats().getRes()-magnitude);
-                default -> { }
-            }
-        }
-    }
-
-    @Override
-    public boolean isExpired() {
-        return remaining <= 0;
     }
 
     @Override
     public String getName() {
-        return name;
+        return this.name;
     }
 
     @Override
-    public void scaleMagnitude(double mul){
-        this.magnitude = (int)(this.magnitude*mul);  // todo: this might not be a great way to calculate
+    public void scaleMagnitude(double mul) {
+        this.magnitude = (int)(this.magnitude*mul);
     }
 
+    @Override
+    public void onExpire(Combatant target, EventBus bus, ExpireReason reason) {
+        switch (type) {
+            case DEF_DOWN -> target.getStats().setDef(target.getStats().getDef() + magnitude);
+            case RES_DOWN -> target.getStats().setRes(target.getStats().getRes() + magnitude);
+            default -> {}
+        }
+    }
+
+    @Override
+    public double rollRateMultiplier() {
+        return (type == EffectType.BLEED) ? 2.0 : 1.0; // tune as desired
+    }
+
+    @Override
+    public int initialDuration(){
+        return initialDuration;
+    }
 }

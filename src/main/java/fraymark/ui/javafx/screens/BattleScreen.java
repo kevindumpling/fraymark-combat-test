@@ -3,6 +3,7 @@ package fraymark.ui.javafx.screens;
 import fraymark.combat.engine.*;
 import fraymark.combat.events.*;
 import fraymark.model.actions.*;
+import fraymark.model.actions.weaves.Weave;
 import fraymark.model.combatants.*;
 import fraymark.model.position.DistanceTier;
 import fraymark.ui.javafx.viewmodel.*;
@@ -354,7 +355,25 @@ public class BattleScreen extends BorderPane implements EventListener {
 
         for (Action a : actions) {
             Button btn = new Button(String.format("%s (TRP: %d)", a.getName(), a.getTrpCost()));
-            btn.setOnAction(e -> performPlayerAction(actor, a));
+            btn.setOnAction(e -> {
+                // If this is a VARIABLE TRP weave, ask how much to spend
+                if (a instanceof Weave weave &&
+                        weave.getTrpSpendMode() == fraymark.model.actions.weaves.TrpSpendMode.VARIABLE) {
+
+                    int chosenExtra = askExtraTrp(actor, weave);
+                    if (chosenExtra < 0) {
+                        // User cancelled: don't do anything
+                        return;
+                    }
+
+                    int base = Math.max(0, weave.getTrpBaseCost());
+                    int totalSpend = base + chosenExtra;
+
+                    // Tell the engine what to spend for THIS cast
+                    engine.setTrpOverride(actor, weave, totalSpend);
+                }
+                performPlayerAction(actor, a);
+            });
 
             // Disable if can't afford
             if (!a.canUse(actor)) {
@@ -438,5 +457,75 @@ public class BattleScreen extends BorderPane implements EventListener {
     @Override
     public void onEvent(CombatEvent event) {
         log.appendText(event.getMessage() + "\n");
+    }
+
+    private int askExtraTrp(Combatant actor, fraymark.model.actions.weaves.Weave weave) {
+        int available = actor.getResources().getTrp();
+        int base = Math.max(0, weave.getTrpBaseCost());
+        int maxExtra = Math.max(0, available - base);
+
+        if (maxExtra <= 0) {
+            // No extra possible; just use base
+            return 0;
+        }
+
+        Dialog<Integer> dialog = new Dialog<>();
+        dialog.setTitle("TRP Spend");
+        dialog.setHeaderText(weave.getName() + " — variable TRP spend");
+
+        ButtonType okType = new ButtonType("Confirm", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(okType, ButtonType.CANCEL);
+
+        // Slider 0..maxExtra
+        Slider slider = new Slider(0, maxExtra, 0);
+        slider.setMajorTickUnit(1);
+        slider.setMinorTickCount(0);
+        slider.setSnapToTicks(true);
+        slider.setShowTickMarks(true);
+        slider.setShowTickLabels(true);
+
+        Label info = new Label();
+
+        // Compute damage multiplier preview if profile exists
+        fraymark.model.actions.weaves.TrpScalingProfile prof = weave.getTrpScalingProfile();
+
+        slider.valueProperty().addListener((obs, oldV, newV) -> {
+            int extra = newV.intValue();
+            StringBuilder sb = new StringBuilder("Extra TRP: " + extra +
+                    " (total " + (base + extra) + "/" + available + ")");
+
+            if (prof != null) {
+                double mul = 1.0 + prof.perPointMul() * extra;
+                if (prof.capMul() > 0.0) mul = Math.min(mul, prof.capMul());
+                sb.append(String.format(" • Damage × %.2f", mul));
+            }
+
+            info.setText(sb.toString());
+        });
+
+        // Kick initial label
+        slider.setValue(0);
+
+        VBox content = new VBox(10,
+                new Label("Choose how much extra TRP to invest:"),
+                slider,
+                info
+        );
+        content.setPadding(new Insets(10));
+
+        dialog.getDialogPane().setContent(content);
+
+        dialog.setResultConverter(button -> {
+            if (button == okType) {
+                return (int) Math.round(slider.getValue());
+            }
+            return null; // cancel
+        });
+
+        Integer result = dialog.showAndWait().orElse(null);
+        if (result == null) {
+            return -1; // signal cancel to caller
+        }
+        return result;
     }
 }

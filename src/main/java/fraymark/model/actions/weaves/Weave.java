@@ -9,4 +9,8 @@ public interface Weave extends Action {
     double getBarrierIgnorePct();           // 0..1 (e.g., 0.25 ignores 25% barrier)
     double getResBypassPct();               // 0..1 (e.g., 0.30)
     int    getResBypassFlat();              // flat RES bypass
+
+    int getTrpBaseCost();
+    TrpSpendMode getTrpSpendMode();          // FLAT/VARIABLE/ALL
+    TrpScalingProfile getTrpScalingProfile();
 }

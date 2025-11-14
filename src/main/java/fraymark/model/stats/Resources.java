@@ -121,7 +121,7 @@ public class Resources {
 
     // === Barrier ===
     public double getBarrier() { return barrier.get(); }
-    public void setBarrier(int value) { barrier.set(value); }
+    public void setBarrier(double value) { barrier.set(value); }
 
     public DoubleProperty barrierProperty() { return barrier; }
 

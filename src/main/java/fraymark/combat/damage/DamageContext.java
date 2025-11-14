@@ -24,13 +24,20 @@ public class DamageContext {
     private int baseMgGain = 0;
     private double mgGainMultiplier = 1.0;
 
+    private boolean executed = false;
+
     private double defBypassPct = 0.0;
     private int defBypassFlat = 0;
     private double resBypassPct = 0.0;
     private int    resBypassFlat = 0;
     private double barrierIgnorePct = 0.0;
 
-    private boolean executed = false;
+    private int trpSnapshot;
+    private int trpToSpend;      // decided up-front for this action (once)
+    private double trpScaleMul = 1.0;
+    private boolean trpPlanned = false;
+    private boolean trpDebited = false;
+    private boolean primaryHit = true; // mark first target; others false
 
     public DamageContext(Combatant source, Combatant target, double basePower, Action action, EventBus bus) {
         this.source = source;
@@ -89,4 +96,19 @@ public class DamageContext {
     public double getResBypassPct(){ return resBypassPct; }
     public int getResBypassFlat(){ return resBypassFlat; }
     public double getBarrierIgnorePct(){ return barrierIgnorePct; }
+
+    public DamageContext withTrpSnapshot(int t){ this.trpSnapshot=t; return this; }
+    public int getTrpSnapshot(){ return trpSnapshot; }
+
+    public void multiplyByTrp(double m){ this.trpScaleMul *= m; this.setFinalDamage(this.finalDamage()*m); }
+
+    public DamageContext setTrpToSpend(int v){ this.trpToSpend = Math.max(0, v); this.trpPlanned = true; return this; }
+    public int getTrpToSpend(){ return trpToSpend; }
+    public boolean isTrpPlanned(){ return trpPlanned; }
+
+    public DamageContext markTrpDebited(){ this.trpDebited = true; return this; }
+    public boolean isTrpDebited(){ return trpDebited; }
+
+    public DamageContext withPrimaryHit(boolean v){ this.primaryHit = v; return this; }
+    public boolean isPrimaryHit(){ return primaryHit; }
 }
