@@ -28,12 +28,16 @@ public class ApplyDamageHandler implements DamageHandler {
 
         target.getResources().enqueueRollingDamage((int)amount);  // apply the damage as rolling damage
 
+        String msg;
         if (ctx.bus() != null) {
-            String msg = String.format(
+            if (ctx.getCustomDamageLog() == null){
+                msg = String.format(
                     "(%s took %d damage!)",
                     target.getName(),
                     (int) amount
-            );
+            );} else {
+                msg = ctx.getCustomDamageLog();
+            }
 
             ctx.bus().publish(new CombatEvent(
                     CombatEventType.DAMAGE,

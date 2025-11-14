@@ -129,4 +129,12 @@ public class Resources {
     public int getArmorAmount() { return armorAmount.get(); }
     public void setArmorAmount(int value) { armorAmount.set(value); }
     public IntegerProperty armorProperty() { return armorAmount; }
+
+    public double getBaseRollRatePerSecond() {
+        return this.baseRollRatePerSecond;
+    }
+
+    public double getRollRateMultiplier() {
+        return this.rollRateMultiplier;
+    }
 }

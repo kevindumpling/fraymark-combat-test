@@ -43,7 +43,7 @@ public class FraymarkApp extends Application {
         pipeline.addHandler(new ResHandler());
 
         // special behavior
-        pipeline.addHandler(new CounterHandler());
+        // pipeline.addHandler(new CounterHandler()); TODO BROKEN
         pipeline.addHandler(new InterruptHandler(bus));
         pipeline.addHandler(new ExecutionHandler());
 

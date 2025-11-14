@@ -41,12 +41,14 @@ public class DataAssembler {
         var physicalsData = DataLoader.loadPhysicalsRaw();
         var weaponsData  = DataLoader.loadWeaponsRaw();
 
-        // Register effects
-        effectFactory.loadFromTypeDefs(effectsData);
-
-        System.out.println("DEBUG: Physicals raw: " + physicalsData.size() + " entries");
-        if (!physicalsData.isEmpty()) {
-            System.out.println("    DEBUG: First physical entry keys: " + physicalsData.get(0).keySet());
+        // ===== Register effect templates by id (new system) =====
+        for (Map<String, Object> eff : effectsData) {
+            Object idObj = eff.get("id");
+            if (!(idObj instanceof String id) || id.isBlank()) {
+                System.err.println("Skipping effect template with no id: " + eff);
+                continue;
+            }
+            effectFactory.registerTemplate(id, eff);
         }
 
         // === Build all actions (weaves + physicals) ===

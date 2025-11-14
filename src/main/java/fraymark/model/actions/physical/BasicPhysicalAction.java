@@ -94,8 +94,12 @@ public class BasicPhysicalAction implements Physical {
                     e.scaleMagnitude(aoeEffectMultiplier); // implement a no-op if not supported
                 }
 
-                events.add(CombatEvent.logEvent(user, t, t.getName() + " is affected by " + e.getName() + "!"));
-            }
+                events.add(CombatEvent.applyEffect(
+                        user,
+                        t,
+                        e,
+                        t.getName() + " is affected by " + e.getName() + "!"
+                ));            }
         }
 
         return new ActionResult(events);
