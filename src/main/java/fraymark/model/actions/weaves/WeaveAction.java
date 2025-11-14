@@ -1,5 +1,6 @@
 package fraymark.model.actions.weaves;
 
+import fraymark.combat.damage.pipeline.TrpScalingHandler;
 import fraymark.model.actions.*;
 import fraymark.model.combatants.Combatant;
 import fraymark.model.effects.*;
@@ -9,16 +10,16 @@ import fraymark.model.stats.Resources;
 import java.util.*;
 
 import static java.lang.Math.max;
-
 /***
  * A WeaveAction represents a Weave attack.
  */
-public class WeaveAction implements Action {
+public class WeaveAction implements Weave {
     protected final List<EffectDescriptor> effectBundle = new ArrayList<>();
     protected final int power;
     protected final int trpCost;
     protected final String name;
     private final String flavorOnUse;
+    protected final WeaveSchool school;
 
     private final TargetingMode targeting;
     private final AttackRangeKind rangeKind;
@@ -26,18 +27,37 @@ public class WeaveAction implements Action {
     private final double aoeEffectMultiplier;      // default 1.0
     private final List<EffectDescriptor> aoeEffectBundle;   // default empty
 
-    public WeaveAction(String name, int power, int trpCost, String flavorOnUse, TargetingMode targeting, AttackRangeKind rangeKind,
+    private final double barrierIgnorePct;  // default 0
+    private final double resBypassPct;      // default 0
+    private final int    resBypassFlat;     // default 0
+
+    private final int trpBaseCost;                         // base TRP cost the handler will read
+    private final TrpSpendMode trpSpendMode;               // FLAT / VARIABLE / ALL_REMAINING, etc.
+    private final TrpScalingProfile trpScalingProfile;         // nullable if not using scaling
+
+    public WeaveAction(String name, WeaveSchool school, int power, int trpCost, String flavorOnUse, double barrierIgnorePct,
+                       double resBypassPct, int resBypassFlat, TrpSpendMode trpSpendMode, TrpScalingProfile trpScalingProfile,
+                       TargetingMode targeting, AttackRangeKind rangeKind,
                        double aoeDamageMultiplier, double aoeEffectMultiplier, List<EffectDescriptor> aoeEffectBundle) {
         this.power = power;
+        this.school = school;
         this.name = name;
         this.trpCost = trpCost;
         this.flavorOnUse = flavorOnUse;
+        this.barrierIgnorePct =  barrierIgnorePct;
+        this.resBypassPct = resBypassPct;
+        this.resBypassFlat = resBypassFlat;
+        this.trpBaseCost = trpCost;             // handler reads this
+        this.trpSpendMode = (trpSpendMode != null) ? trpSpendMode : TrpSpendMode.FLAT;
+        this.trpScalingProfile = trpScalingProfile;
 
         this.targeting = targeting;
         this.rangeKind = rangeKind;
         this.aoeDamageMultiplier = aoeDamageMultiplier;
         this.aoeEffectMultiplier = aoeEffectMultiplier;
         this.aoeEffectBundle = aoeEffectBundle;
+
+
     }
 
     @Override
@@ -56,7 +76,6 @@ public class WeaveAction implements Action {
             Combatant target = c;
 
             events.add(CombatEvent.damageEvent(user, target, this.power, "\n" + user.getName() + " tried " + getName()));
-            user.getResources().setTrp(user.getResources().getTrp() - this.trpCost);
 
             // Add on-use flavor line (if provided)
             if (flavorOnUse != null && !flavorOnUse.isBlank()) {
@@ -67,10 +86,8 @@ public class WeaveAction implements Action {
             // Apply all attached effects.
             for (EffectDescriptor desc : effectBundle) {
                 Effect effect = desc.instantiate(user, target);
-                effect.onApply(target);
-                target.addStatus(effect);
-                events.add(CombatEvent.logEvent(
-                        user, target, target.getName() + " was affected by " + effect.getName() + "!"));
+                events.add(CombatEvent.applyEffect(user, target, effect,
+                        target.getName() + " was affected by " + effect.getName() + "!"));
             }
 
 
@@ -108,4 +125,14 @@ public class WeaveAction implements Action {
     public double getAoeDamageMultiplier() { return aoeDamageMultiplier; }
     public double getAoeEffectMagnitudeMultiplier() { return aoeEffectMultiplier; }
     public List<EffectDescriptor> getAoeEffectBundle() { return aoeEffectBundle; }
+    @Override public double getResBypassPct() { return resBypassPct; }
+    @Override public int getResBypassFlat() { return resBypassFlat; }
+
+
+
+    @Override public double getBarrierIgnorePct() { return barrierIgnorePct; }
+    @Override public WeaveSchool getSchool() { return school; }
+    @Override public int getTrpBaseCost() { return trpBaseCost; }
+    @Override public TrpSpendMode getTrpSpendMode() { return trpSpendMode; }
+    @Override public TrpScalingProfile getTrpScalingProfile() { return trpScalingProfile; }
 }

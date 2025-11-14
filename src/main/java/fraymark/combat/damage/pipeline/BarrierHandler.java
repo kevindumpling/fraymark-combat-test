@@ -2,22 +2,27 @@ package fraymark.combat.damage.pipeline;
 
 import fraymark.combat.damage.DamageContext;
 
+import static java.lang.Math.max;
+
 /***
  * BarrierHandler is a type of DamageHandler that calculates damage absorption when resolving damage.
  */
 public class BarrierHandler implements DamageHandler {
     @Override
     public boolean handle(DamageContext ctx) {
-        int barrier = ctx.target().getResources().getBarrier();
-        if (barrier > 0) {
-            double absorbed = Math.min(barrier, ctx.finalDamage());
-            ctx.target().getResources().setBarrier((int)(ctx.target().getResources().getBarrier() - absorbed));
-            ctx.setFinalDamage(ctx.finalDamage() - absorbed);
-            if (ctx.finalDamage() <= 0) {
-                ctx.cancel();
-                return true;
-            }
-        }
+        double barrier = ctx.target().getResources().getBarrier();     // 0..1
+        double ignore  = Math.max(0, Math.min(1, ctx.getBarrierIgnorePct()));
+
+        double effectiveBarrier = Math.max(0.0, Math.min(1.0, barrier - ignore));
+        if (effectiveBarrier <= 0) return false;
+
+        double in       = ctx.finalDamage();
+        double absorbed = in * effectiveBarrier;
+        double out      = in - absorbed;                    // ← keep the remainder
+
+        ctx.setFinalDamage(out);
+
+        if (out <= 0) { ctx.cancel(); return true; }
         return false;
     }
 }

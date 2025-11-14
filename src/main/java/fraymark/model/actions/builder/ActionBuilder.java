@@ -4,7 +4,10 @@ import fraymark.model.actions.*;
 import fraymark.model.actions.physical.BasicPhysicalAction;
 import fraymark.model.actions.physical.CloseRangeProfile;
 import fraymark.model.actions.physical.ExecutionProfile;
+import fraymark.model.actions.weaves.TrpScalingProfile;
+import fraymark.model.actions.weaves.TrpSpendMode;
 import fraymark.model.actions.weaves.WeaveAction;
+import fraymark.model.actions.weaves.WeaveSchool;
 import fraymark.model.effects.EffectDescriptor;
 import fraymark.model.effects.factory.EffectFactory;
 
@@ -26,7 +29,14 @@ public class ActionBuilder {
         // === 1. BEGIN PARSING ACTION DATA ===
         String name = (String) data.getOrDefault("name", "Unnamed Action");
         int power = ((Number) data.getOrDefault("power", 0)).intValue();
+        String schoolStr = (String) data.getOrDefault("school", "ALPHA");
         int trpCost = ((Number) data.getOrDefault("trpCost", 0)).intValue();  // this is a GAIN value for physicals
+        double barrierIgnorePct = ((Number)data.getOrDefault("barrierIgnorePct", 0.0)).doubleValue();  // weave only
+        double resBypassPct  = ((Number)data.getOrDefault("resBypassPct", 0.0)).doubleValue(); // weave only
+        int    resBypassFlat = ((Number)data.getOrDefault("resBypassFlat", 0)).intValue(); // weave only
+        String spendModeStr = (String) data.getOrDefault("trpSpendMode", "FLAT");
+        TrpScalingProfile trpScalingProfile = this.parseTrpScalingProfile(data);
+
         int mgGainOrCost = ((Number) data.getOrDefault("mgGainOrCost", 0)).intValue();
         String flavorOnUse = (String) data.getOrDefault("flavorOnUse", "");
         MomentumProfile momentumProfile = this.parseMomentumProfile(data);
@@ -48,7 +58,8 @@ public class ActionBuilder {
             case "PHYSICAL_BASIC", "WEAPON" -> new BasicPhysicalAction(name, power, trpCost, mgGainOrCost, momentumProfile, closeRangeProfile, executionProfile,
                     flavorOnUse,
                     TargetingMode.valueOf(targeting), AttackRangeKind.valueOf(rangeKind), aoeDmgMul, aoeEffMul, aoeEffects);
-            case "WEAVE" -> new WeaveAction(name, power, trpCost, flavorOnUse,
+            case "WEAVE" -> new WeaveAction(name, WeaveSchool.valueOf(schoolStr), power, trpCost, flavorOnUse,barrierIgnorePct,
+                    resBypassPct, resBypassFlat, TrpSpendMode.valueOf(spendModeStr), trpScalingProfile,
                     TargetingMode.valueOf(targeting), AttackRangeKind.valueOf(rangeKind), aoeDmgMul, aoeEffMul, aoeEffects);
             default -> throw new IllegalArgumentException("Unknown action type: " + type);
         };
@@ -141,6 +152,29 @@ public class ActionBuilder {
 
         return exec;
 
+    }
+
+    private TrpScalingProfile parseTrpScalingProfile(Map<String, Object> data){
+        TrpScalingProfile scaleProfile = null;
+        Object scaleObj = data.get("trpScalingProfile");
+        if (scaleObj instanceof Map<?,?> m) {
+            double per = toDouble(m.get("perPointMul"), 0.0);
+            double cap = toDouble(m.get("capMul"), 0.0);
+
+            // Optional min/max TRP spends for VARIABLE weaves.
+            Object minObj = m.get("minExtra");
+            Object maxObj = m.get("maxExtra");
+            int min = (minObj instanceof Number n) ? n.intValue() : 0;
+            int max = (maxObj instanceof Number n) ? n.intValue() : Integer.MAX_VALUE;
+
+            scaleProfile = new TrpScalingProfile(per, cap, min, max);
+        }
+        return scaleProfile;
+    }
+
+    private static double toDouble(Object v, double d) {
+        if (v instanceof Number n) return n.doubleValue();
+        try { return v != null ? Double.parseDouble(v.toString()) : d; } catch(Exception e) { return d; }
     }
 }
 

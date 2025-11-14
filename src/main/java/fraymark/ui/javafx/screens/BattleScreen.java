@@ -3,6 +3,8 @@ package fraymark.ui.javafx.screens;
 import fraymark.combat.engine.*;
 import fraymark.combat.events.*;
 import fraymark.model.actions.*;
+import fraymark.model.actions.weaves.TrpScalingProfile;
+import fraymark.model.actions.weaves.Weave;
 import fraymark.model.combatants.*;
 import fraymark.model.position.DistanceTier;
 import fraymark.ui.javafx.viewmodel.*;
@@ -354,7 +356,25 @@ public class BattleScreen extends BorderPane implements EventListener {
 
         for (Action a : actions) {
             Button btn = new Button(String.format("%s (TRP: %d)", a.getName(), a.getTrpCost()));
-            btn.setOnAction(e -> performPlayerAction(actor, a));
+            btn.setOnAction(e -> {
+                // If this is a VARIABLE TRP weave, ask how much to spend
+                if (a instanceof Weave weave &&
+                        weave.getTrpSpendMode() == fraymark.model.actions.weaves.TrpSpendMode.VARIABLE) {
+
+                    int chosenExtra = askExtraTrp(actor, weave);
+                    if (chosenExtra < 0) {
+                        // User cancelled: don't do anything
+                        return;
+                    }
+
+                    int base = Math.max(0, weave.getTrpBaseCost());
+                    int totalSpend = base + chosenExtra;
+
+                    // Tell the engine what to spend for THIS cast
+                    engine.setTrpOverride(actor, weave, totalSpend);
+                }
+                performPlayerAction(actor, a);
+            });
 
             // Disable if can't afford
             if (!a.canUse(actor)) {
@@ -439,4 +459,91 @@ public class BattleScreen extends BorderPane implements EventListener {
     public void onEvent(CombatEvent event) {
         log.appendText(event.getMessage() + "\n");
     }
+
+    private int askExtraTrp(Combatant actor, fraymark.model.actions.weaves.Weave weave) {
+        int available = actor.getResources().getTrp();
+        int base = Math.max(0, weave.getTrpBaseCost());
+        int maxByTrp = Math.max(0, available - base); // physical limit
+
+        TrpScalingProfile prof = weave.getTrpScalingProfile();
+
+        int profileMin = 0;
+        int profileMax = maxByTrp;
+
+        if (prof != null) {
+            profileMin = Math.max(0, prof.minExtra());
+            if (prof.maxExtra() > 0 && prof.maxExtra() != Integer.MAX_VALUE) {
+                profileMax = Math.min(maxByTrp, prof.maxExtra());
+            } else {
+                profileMax = maxByTrp;
+            }
+        }
+
+        int effMax = Math.min(maxByTrp, profileMax);
+        if (effMax <= 0) {
+            // Can't afford any extra; just use base TRP
+            return 0;
+        }
+
+        int effMin = Math.min(profileMin, effMax);
+
+        Dialog<Integer> dialog = new Dialog<>();
+        dialog.setTitle("TRP Spend");
+        dialog.setHeaderText(weave.getName() + " — variable TRP spend");
+
+        ButtonType okType = new ButtonType("Confirm", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(okType, ButtonType.CANCEL);
+
+        Slider slider = new Slider(effMin, effMax, effMin);
+        slider.setMajorTickUnit(1);
+        slider.setMinorTickCount(0);
+        slider.setSnapToTicks(true);
+        slider.setShowTickMarks(true);
+        slider.setShowTickLabels(true);
+
+        Label info = new Label();
+
+        slider.valueProperty().addListener((obs, oldV, newV) -> {
+            int extra = newV.intValue();
+            StringBuilder sb = new StringBuilder(
+                    "Extra TRP: " + extra +
+                            " (total " + (base + extra) + "/" + available + ")"
+            );
+
+            if (prof != null) {
+                int extraForMul = extra;
+                double mul = 1.0 + prof.perPointMul() * extraForMul;
+                if (prof.capMul() > 0.0) mul = Math.min(mul, prof.capMul());
+                sb.append(String.format(" • Damage × %.2f", mul));
+                sb.append(String.format(" • Allowed extra [%d..%d]", effMin, effMax));
+            }
+
+            info.setText(sb.toString());
+        });
+
+        // Trigger initial text
+        slider.setValue(effMin);
+
+        VBox content = new VBox(10,
+                new Label("Choose how much extra TRP to invest:"),
+                slider,
+                info
+        );
+        content.setPadding(new Insets(10));
+        dialog.getDialogPane().setContent(content);
+
+        dialog.setResultConverter(button -> {
+            if (button == okType) {
+                return (int) Math.round(slider.getValue());
+            }
+            return null;
+        });
+
+        Integer result = dialog.showAndWait().orElse(null);
+        if (result == null) {
+            return -1; // cancel
+        }
+        return result;
+    }
+
 }

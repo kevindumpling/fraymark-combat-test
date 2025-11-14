@@ -30,20 +30,28 @@ public class FraymarkApp extends Application {
         DamagePipeline pipeline = new DamagePipeline();
 
         // pre-damage scaling
+        pipeline.addHandler(new TrpSpendPlanHandler());
+        pipeline.addHandler(new TrpScalingHandler());
+
         pipeline.addHandler(new MomentumScalingHandler());
         pipeline.addHandler(new CloseRangeBonusHandler());
-        pipeline.addHandler(new MgGainHandler());
 
         // damage negation/armor
         pipeline.addHandler(new BarrierHandler());  // damage absorbption via shielding
         pipeline.addHandler(new ArmorHandler());  // damage to armorAmount goes here
         pipeline.addHandler(new DefenseHandler());
+        pipeline.addHandler(new ResHandler());
 
         // special behavior
         pipeline.addHandler(new CounterHandler());
         pipeline.addHandler(new InterruptHandler(bus));
         pipeline.addHandler(new ExecutionHandler());
 
+        // gains
+        pipeline.addHandler(new MgGainHandler());
+        pipeline.addHandler(new TrpDebitHandler());
+
+        // final damage
         pipeline.addHandler(new ApplyDamageHandler()); // last stage
 
         // Hook up resolvers and engine.

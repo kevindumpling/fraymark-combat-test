@@ -1,5 +1,6 @@
 package fraymark.model.effects;
 
+import fraymark.combat.events.EventBus;
 import fraymark.model.combatants.Combatant;
 
 /***
@@ -13,11 +14,21 @@ public interface Effect {
 
     void onTurnEnd(Combatant target);
 
-    boolean isExpired();
-
     String getName();
 
     void scaleMagnitude(double mul);
 
-    default double rollRateMultiplier() { return 1.0; }  // override in Bleed/Poison/etc. if desired
+    // called exactly once when the effect is removed (duration ends, dispel, overwrite)
+    default void onExpire(Combatant target, EventBus bus, ExpireReason reason) {}
+
+    // a stable key to handle uniqueness/stacking (e.g., "BARRIER:0.30")
+    default String key() { return getClass().getName(); }
+
+    // how this effect stacks with another of the same key
+    default StackingRule stacking() { return StackingRule.REFRESH_DURATION; }
+
+    // default duration in turns (0/negative means “indefinite” unless you manage it externally)
+    default int initialDuration() { return 0; }
+
+    default double rollRateMultiplier() { return 1.0; } // 1.0 = no change
 }

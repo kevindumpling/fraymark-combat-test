@@ -157,6 +157,7 @@ public class BattleState {
         }
     }
 
+
     // === Getters ===
     public List<Combatant> getParty() { return party; }
     public List<Combatant> getEnemies() { return enemies; }
