@@ -172,7 +172,8 @@ public class BattleEngine {
                     eventBus)
                     .withRangeKind(AttackRangeKind.ALL)
                     .withTargetIsClose(isClose)
-                    .withBaseMgGain(0);
+                    .withBaseMgGain(0)
+                    .withCustomDamageLog(ev.getMessage()); // use the DOT-specific message
 
             // Optionally, if you want handlers to know this is DoT, add:
             // dctx.setSourceEffect(ev.getEffect()); // if you stored it

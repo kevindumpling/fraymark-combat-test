@@ -39,6 +39,8 @@ public class DamageContext {
     private boolean trpDebited = false;
     private boolean primaryHit = true; // mark first target; others false
 
+    private String customDamageLog; // optional override
+
     public DamageContext(Combatant source, Combatant target, double basePower, Action action, EventBus bus) {
         this.source = source;
         this.target = target;
@@ -111,4 +113,7 @@ public class DamageContext {
 
     public DamageContext withPrimaryHit(boolean v){ this.primaryHit = v; return this; }
     public boolean isPrimaryHit(){ return primaryHit; }
+
+    public DamageContext withCustomDamageLog(String msg) { this.customDamageLog = msg; return this; }
+    public String getCustomDamageLog() { return customDamageLog; }
 }
