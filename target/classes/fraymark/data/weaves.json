@@ -9,7 +9,7 @@
     "effects": ["burn"],
     "resBypassPct": 0.9,
     "trpSpendMode": "VARIABLE",
-    "trpScalingProfile": {"perPointMul":  0.01, "capMul": 2, "minExtra":  0, "maxExtra":  5},
+    "trpScalingProfile": {"perPointMul":  0.1, "capMul": 2, "minExtra":  0, "maxExtra":  5},
 
     "targeting": "AOE_TIER",
     "rangeKind": "ALL",
