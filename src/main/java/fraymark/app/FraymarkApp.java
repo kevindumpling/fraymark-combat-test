@@ -4,6 +4,7 @@ import fraymark.combat.engine.*;
 import fraymark.combat.events.EventBus;
 import fraymark.combat.damage.pipeline.*;
 import fraymark.model.combatants.*;
+import fraymark.model.fields.factory.FieldFactory;
 import fraymark.model.stats.*;
 import fraymark.model.actions.physical.BasicPhysicalAction;
 import fraymark.ui.javafx.screens.BattleScreen;
@@ -25,9 +26,13 @@ public class FraymarkApp extends Application {
         // DEBUG
         System.out.println("Party: " + state.getParty().size());
         System.out.println("Enemies: " + state.getEnemies().size());
-        // Hook up event pipeline.
+        // Global bus.
         EventBus bus = new EventBus();
+        // Hook up the pipeline's core components.
         DamagePipeline pipeline = new DamagePipeline();
+        FieldFactory fieldFactory = assembler.getFieldFactory();
+        FieldManager fieldManager = new FieldManager(bus);
+        state.setFieldManager(fieldManager);
 
         // pre-damage scaling
         pipeline.addHandler(new TrpSpendPlanHandler());
@@ -50,13 +55,14 @@ public class FraymarkApp extends Application {
         // gains
         pipeline.addHandler(new MgGainHandler());
         pipeline.addHandler(new TrpDebitHandler());
+        pipeline.addHandler(new FieldTrpHandler(fieldManager));
 
         // final damage
         pipeline.addHandler(new ApplyDamageHandler()); // last stage
 
         // Hook up resolvers and engine.
         EffectResolver resolver = new EffectResolver(bus);
-        BattleEngine engine = new BattleEngine(bus, pipeline, resolver);
+        BattleEngine engine = new BattleEngine(bus, pipeline, resolver, fieldFactory);
 
         // Set up screen and show.
         BattleScreen screen = new BattleScreen(state, engine, bus);

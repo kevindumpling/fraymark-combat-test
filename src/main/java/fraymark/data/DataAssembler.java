@@ -1,9 +1,11 @@
 package fraymark.data;
 
 import fraymark.combat.engine.BattleState;
+import fraymark.combat.engine.FieldManager;
 import fraymark.model.actions.Action;
 import fraymark.model.actions.builder.ActionBuilder;
 import fraymark.model.effects.factory.EffectFactory;
+import fraymark.model.fields.factory.FieldFactory;
 import fraymark.model.weapons.*;
 import fraymark.model.combatants.*;
 import java.util.*;
@@ -17,6 +19,7 @@ public class DataAssembler {
     private final ActionBuilder actionBuilder = new ActionBuilder(effectFactory);
     private final WeaponFactory weaponFactory = new WeaponFactory();
     private final CharacterFactory characterFactory = new CharacterFactory();
+    private final FieldFactory fieldFactory = new FieldFactory(effectFactory);
 
     private final Map<String, Action> actionRegistry = new HashMap<>();
     private final Map<String, Weapon> weaponRegistry = new HashMap<>();
@@ -40,6 +43,7 @@ public class DataAssembler {
         var weavesData   = DataLoader.loadWeavesRaw();
         var physicalsData = DataLoader.loadPhysicalsRaw();
         var weaponsData  = DataLoader.loadWeaponsRaw();
+        var fieldsData  = DataLoader.loadFieldsRaw();
 
         // ===== Register effect templates by id (new system) =====
         for (Map<String, Object> eff : effectsData) {
@@ -49,6 +53,12 @@ public class DataAssembler {
                 continue;
             }
             effectFactory.registerTemplate(id, eff);
+        }
+
+        // === Regiter fields ===
+        for (var fld : fieldsData) {
+            String id = (String) fld.get("id");
+            if (id != null) fieldFactory.registerTemplate(id, fld);
         }
 
         // === Build all actions (weaves + physicals) ===
@@ -88,4 +98,5 @@ public class DataAssembler {
     public Map<String, Action> getActionRegistry() { return actionRegistry; }
     public Map<String, Weapon> getWeaponRegistry() { return weaponRegistry; }
     public EffectFactory getEffectFactory() { return effectFactory; }
+    public FieldFactory getFieldFactory()   { return fieldFactory; }
 }

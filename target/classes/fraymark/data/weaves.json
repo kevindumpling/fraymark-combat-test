@@ -25,6 +25,7 @@
     "power": 0,
     "trpCost": 1,
     "effects": ["bleed"],
+    "fields": ["healing_fog"],
     "description": "Generates a resilient field of energy around the user.",
     "flavorOnUse": "A resilient field of energy appeared!"
   }

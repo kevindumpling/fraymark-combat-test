@@ -14,12 +14,13 @@ import static java.lang.Math.max;
  * A WeaveAction represents a Weave attack.
  */
 public class WeaveAction implements Weave {
-    protected final List<EffectDescriptor> effectBundle = new ArrayList<>();
     protected final int power;
     protected final int trpCost;
     protected final String name;
     private final String flavorOnUse;
     protected final WeaveSchool school;
+    protected final List<EffectDescriptor> effectBundle = new ArrayList<>();
+    protected final List<String> fieldIds = new ArrayList<>();
 
     private final TargetingMode targeting;
     private final AttackRangeKind rangeKind;
@@ -89,6 +90,13 @@ public class WeaveAction implements Weave {
                 events.add(CombatEvent.applyEffect(user, target, effect,
                         target.getName() + " was affected by " + effect.getName() + "!"));
             }
+            // Apply all fields.
+            if (!fieldIds.isEmpty()) {
+                for (String id : fieldIds) {
+                    String msg = user.getName() + " altered the field: " + id + "!";
+                    events.add(CombatEvent.addFieldEvent(user, id, msg));
+                }
+            }
 
 
         }
@@ -135,5 +143,5 @@ public class WeaveAction implements Weave {
     @Override public int getTrpBaseCost() { return trpBaseCost; }
     @Override public TrpSpendMode getTrpSpendMode() { return trpSpendMode; }
     @Override public TrpScalingProfile getTrpScalingProfile() { return trpScalingProfile; }
-
+    public void addFieldId(String id){ this.fieldIds.add(id); }
 }

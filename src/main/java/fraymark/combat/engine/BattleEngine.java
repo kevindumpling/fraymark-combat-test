@@ -8,6 +8,8 @@ import fraymark.model.combatants.Combatant;
 import fraymark.combat.events.*;
 import fraymark.combat.damage.DamageContext;
 import fraymark.combat.damage.pipeline.DamagePipeline;
+import fraymark.model.fields.FieldDescriptor;
+import fraymark.model.fields.factory.FieldFactory;
 import fraymark.model.position.DistanceTier;
 
 import java.util.ArrayList;
@@ -24,11 +26,14 @@ public class BattleEngine {
     private final EffectResolver effects;
     private final StateMachine stateMachine = new StateMachine();
     private final Map<String, Integer> trpOverrides = new HashMap<>();
+    private final FieldFactory fieldFactory; // NEW
 
-    public BattleEngine(EventBus bus, DamagePipeline pipeline, EffectResolver resolver) {
+    public BattleEngine(EventBus bus, DamagePipeline pipeline, EffectResolver resolver, FieldFactory fieldFactory) {
         this.eventBus = bus;
         this.pipeline = pipeline;
         this.effects = resolver;
+        this.fieldFactory = fieldFactory;
+
         stateMachine.reset();
     }
 
@@ -42,8 +47,9 @@ public class BattleEngine {
             return new ActionResult(List.of());
         }
 
-        // Apply start-of-turn effects
+        // Apply start-of-turn effects and field effects
         effects.onTurnStart(List.of(actor));
+        state.getFieldManager().onTurnStart(state, actor);
 
         // Check if actor can still act (might be stunned, dead, etc.)
         if (!canAct(actor)) {
@@ -95,6 +101,17 @@ public class BattleEngine {
                         eventBus.publish(ev); // log first
                         effects.apply(ev.getSource(), ev.getTarget(), ev.getEffect()); // actually apply
                     }
+                    case FIELD_ADD -> {
+                        System.out.println(" FIELD_ADD from Weave and field: " + ev.getMessage());
+
+                        // log message
+                        eventBus.publish(ev);
+
+                        String fieldId = ev.getFieldId();
+                        FieldDescriptor desc = fieldFactory.descriptorFromId(fieldId);
+                        state.getFieldManager().addField(desc, state);
+                        // it will actually instantiate & apply on the next onTurnStart
+                    }
                     default -> eventBus.publish(ev);
                 }
 
@@ -125,8 +142,10 @@ public class BattleEngine {
                     }
 
                     dctx.withPrimaryHit(isPrimary);
-
                 }
+
+                state.getFieldManager().onDamage(dctx);
+
                 pipeline.process(dctx); // ApplyDamageHandler updates HP
             }
         }
@@ -181,10 +200,48 @@ public class BattleEngine {
             pipeline.process(dctx);
         }
 
-        // === End-of-turn phase 2: decrement duration & expire (fade logs) ===
+        // === End-of-turn phase 2: fields ===
+        this.resolveFields(state);
+
+        // === End-of-turn phase 3: decrement duration & expire (fade logs) ===
         effects.finalizeEndOfTurn(state.getParty());
         effects.finalizeEndOfTurn(state.getEnemies());
+        state.getFieldManager().finalizeEndOfRound(state);
+
     }
+
+    private void resolveFields(BattleState state){
+        List<CombatEvent> fieldEvents = state.getFieldManager().generateEndOfRoundEvents(state);
+
+        for (CombatEvent ev : fieldEvents) {
+            switch (ev.getType()) {
+                case DAMAGE -> {
+                    boolean targetIsAlly = state.getParty().contains(ev.getTarget());
+                    var lineup = targetIsAlly ? state.getPartyLineup() : state.getEnemyLineup();
+                    boolean isClose = lineup.tierOf(ev.getTarget()) == DistanceTier.CLOSE;
+
+                    DamageContext dctx = new DamageContext(
+                            ev.getSource(),
+                            ev.getTarget(),
+                            ev.getAmount(),
+                            null,
+                            eventBus)
+                            .withRangeKind(AttackRangeKind.ALL)
+                            .withTargetIsClose(isClose)
+                            .withBaseMgGain(0)
+                            .withCustomDamageLog(ev.getMessage());
+
+                    pipeline.process(dctx);
+                }
+                case EFFECT_APPLIED -> {
+                    eventBus.publish(ev); // log aura text
+                    effects.apply(ev.getSource(), ev.getTarget(), ev.getEffect());
+                }
+                default -> eventBus.publish(ev);
+            }
+        }
+    }
+
 
     /**
      * Check if a combatant can act (not dead, not stunned, etc.)
@@ -252,4 +309,5 @@ public class BattleEngine {
     private Integer getTrpOverride(Combatant actor, Weave weave) {
         return trpOverrides.get(trpKey(actor, weave));
     }
+
 }

@@ -14,6 +14,7 @@ public class CombatEvent {
     private final String message;
     private boolean canceled = false;
     private Effect effect; // nullable
+    private String fieldId;  // nullable, for FIELD_ADD/FIELD_REMOVE
 
     public CombatEvent(CombatEventType type, Combatant source, Combatant target, double amount, String message) {
         this.type = type;
@@ -22,7 +23,6 @@ public class CombatEvent {
         this.amount = amount;
         this.message = message;
     }
-
 
     public CombatEvent(CombatEventType type, Combatant source, Combatant target, double amount, String message, Effect effect) {
         this.type = type;
@@ -33,6 +33,16 @@ public class CombatEvent {
         this.effect = effect;
     }
 
+    public CombatEvent(CombatEventType type, Combatant source, Combatant target, double amount, String message, Effect effect, String fieldId) {
+        this.type = type;
+        this.source = source;
+        this.target = target;
+        this.amount = amount;
+        this.message = message;
+        this.effect = effect;
+        this.fieldId = fieldId;
+    }
+
     public CombatEventType getType() { return type; }
     public Combatant getSource() { return source; }
     public Combatant getTarget() { return target; }
@@ -40,6 +50,7 @@ public class CombatEvent {
     public String getMessage() { return message; }
     public boolean isCanceled() { return canceled; }
     public void cancel() { this.canceled = true; }
+    public String getFieldId() { return fieldId; }
 
     public static CombatEvent damageEvent(Combatant s, Combatant t, double dmg, String label) {
         return new CombatEvent(CombatEventType.DAMAGE, s, t, dmg, label + " on " + t.getName() + "!");
@@ -51,6 +62,10 @@ public class CombatEvent {
 
     public static CombatEvent applyEffect(Combatant src, Combatant tgt, Effect e, String msg){
         return new CombatEvent(CombatEventType.EFFECT_APPLIED, src, tgt, 0, msg, e);
+    }
+
+    public static CombatEvent addFieldEvent(Combatant source, String fieldId, String message) {
+        return new CombatEvent(CombatEventType.FIELD_ADD, source, null, 0, message, null,  fieldId);
     }
 
     public static CombatEvent dotDamageEvent(Combatant src, Combatant tgt, int amount,

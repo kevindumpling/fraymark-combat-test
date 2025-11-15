@@ -32,4 +32,8 @@ public class DataLoader {
     public static List<Map<String, Object>> loadPhysicalsRaw() {
         return JsonUtils.readList("/fraymark/data/physicals.json");
     }
+
+    public static List<Map<String, Object>> loadFieldsRaw() {
+        return JsonUtils.readList("/fraymark/data/fields.json");
+    }
 }

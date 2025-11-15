@@ -1,6 +1,7 @@
 package fraymark.combat.engine;
 
 import fraymark.model.combatants.Combatant;
+import fraymark.model.effects.factory.EffectFactory;
 import fraymark.model.position.Formation;
 import fraymark.model.position.Lineup;
 
@@ -22,6 +23,7 @@ public class BattleState {
     private Formation partyFormation = Formation.KNOT;
     private Formation enemyFormation = Formation.KNOT;
     private Lineup partyLineup, enemyLineup;
+    private FieldManager fieldManager;
 
     public BattleState(List<Combatant> party, List<Combatant> enemies) {
         this.party = party;
@@ -31,8 +33,10 @@ public class BattleState {
 
         this.partyLineup = new Lineup(party, partyFormation);
         this.enemyLineup = new Lineup(enemies, enemyFormation);
+    }
 
-
+    public void setFieldManager(FieldManager fieldManager){
+        this.fieldManager = fieldManager;
     }
 
     /**
@@ -173,6 +177,9 @@ public class BattleState {
     public Formation getEnemyFormation() { return enemyFormation; }
     public void setPartyFormation(Formation f) { partyFormation = f; initLineups(); }
     public void setEnemyFormation(Formation f) { enemyFormation = f; initLineups(); }
+
+    public FieldManager getFieldManager() { return this.fieldManager; }
+
 
     /**
      * Battle result enum.
