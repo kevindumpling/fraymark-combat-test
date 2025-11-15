@@ -26,6 +26,7 @@ CombatantViewModel {
     public IntegerProperty maxHpProperty() { return maxHp; }
     public IntegerProperty mgProperty() { return model.getResources().mgProperty(); }
     public IntegerProperty trpProperty() { return model.getResources().trpProperty(); }
+    public DoubleProperty barrierProperty() { return model.getResources().barrierProperty(); }
 
     public String getName() { return name.get(); }
 }

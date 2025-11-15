@@ -48,6 +48,7 @@ public class ActionBuilder {
         double aoeDmgMul = ((Number) data.getOrDefault("aoeDamageMultiplier", 1.0)).doubleValue();
         double aoeEffMul = ((Number) data.getOrDefault("aoeEffectMultiplier", 1.0)).doubleValue();
         List<EffectDescriptor> aoeEffects = this.parseAoeEffects(data);  // calling on a helper for this one
+        List<String> fieldIds = this.parseFieldIds(data);  // calling on a helper for this one
 
 
 
@@ -58,17 +59,41 @@ public class ActionBuilder {
             case "PHYSICAL_BASIC", "WEAPON" -> new BasicPhysicalAction(name, power, trpCost, mgGainOrCost, momentumProfile, closeRangeProfile, executionProfile,
                     flavorOnUse,
                     TargetingMode.valueOf(targeting), AttackRangeKind.valueOf(rangeKind), aoeDmgMul, aoeEffMul, aoeEffects);
-            case "WEAVE" -> new WeaveAction(name, WeaveSchool.valueOf(schoolStr), power, trpCost, flavorOnUse,barrierIgnorePct,
+            case "WEAVE" -> new WeaveAction(name, WeaveSchool.valueOf(schoolStr), power, trpCost, flavorOnUse, barrierIgnorePct,
                     resBypassPct, resBypassFlat, TrpSpendMode.valueOf(spendModeStr), trpScalingProfile,
                     TargetingMode.valueOf(targeting), AttackRangeKind.valueOf(rangeKind), aoeDmgMul, aoeEffMul, aoeEffects);
             default -> throw new IllegalArgumentException("Unknown action type: " + type);
         };
 
         attachEffectsToAction(action, data);  // attatch any effects that the action may have.
-
-
+        attatchFieldIdsToWeave(action, fieldIds);  // attatch any fields if the action is a weave.
 
         return action;
+    }
+
+    private void attatchFieldIdsToWeave(Action action, List<String> ids) {
+        if (action instanceof WeaveAction){
+            WeaveAction weave = (WeaveAction) action;
+            for (String id : ids) {
+                weave.addFieldId(id);
+            }
+        }
+    }
+
+    private List<String> parseFieldIds(Map<String, Object> data) {
+        List<String> fieldIds = List.of();
+        Object rawFields = data.get("fields");
+        if (rawFields instanceof List<?> list) {
+            List<String> tmp = new ArrayList<>();
+            for (Object o : list) {
+                if (o instanceof String s && !s.isBlank()) {
+                    tmp.add(s);
+                }
+            }
+            fieldIds = List.copyOf(tmp);
+        }
+
+        return fieldIds;
     }
 
     private List<EffectDescriptor> parseAoeEffects(Map<String, Object> data) {

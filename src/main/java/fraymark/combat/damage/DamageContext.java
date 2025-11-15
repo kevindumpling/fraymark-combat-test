@@ -19,6 +19,9 @@ public class DamageContext {
     private double finalDamage;
     private boolean canceled;
 
+    // any potential TRP gain for this hit
+    private int trpGain;
+
     private AttackRangeKind rangeKind = AttackRangeKind.MELEE;
     private boolean targetIsClose = false;
     private int baseMgGain = 0;
@@ -49,6 +52,7 @@ public class DamageContext {
         this.basePower = basePower;
         this.finalDamage = basePower;
         this.canceled = false;
+        this.trpGain = 1;  // default
     }
 
     public Combatant source() { return source; }
@@ -116,4 +120,9 @@ public class DamageContext {
 
     public DamageContext withCustomDamageLog(String msg) { this.customDamageLog = msg; return this; }
     public String getCustomDamageLog() { return customDamageLog; }
+
+
+    public void setFinalTrpGain(int modified) { this.trpGain = modified; }
+
 }
+

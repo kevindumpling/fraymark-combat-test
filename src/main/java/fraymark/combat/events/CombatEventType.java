@@ -9,5 +9,7 @@ public enum CombatEventType {
     EFFECT_EXPIRED,
     INTERRUPT_REQUEST,
     INTERRUPT_RESOLVE,
+    FIELD_ADD,
+    FIELD_REMOVE,
     LOG
 }

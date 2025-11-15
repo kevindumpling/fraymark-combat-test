@@ -11,8 +11,8 @@
     "closeRangeProfile": { "damageMul": 1.25, "defBypassPct": 0.30, "mgGainMul": 1.5 },
     "executionProfile": { "enabled": true, "thresholdPct": 0.9, "requiresNoArmor": true },
 
-    "targeting": "AOE_TIER",
-    "rangeKind": "ALL"
+    "targeting": "SINGLE",
+    "rangeKind": "MELEE"
   },
   {
     "id": "quick_lunge",

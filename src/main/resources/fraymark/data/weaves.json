@@ -9,7 +9,7 @@
     "effects": ["burn"],
     "resBypassPct": 0.9,
     "trpSpendMode": "VARIABLE",
-    "trpScalingProfile": {"perPointMul":  0.01, "capMul": 2, "minExtra":  0, "maxExtra":  5},
+    "trpScalingProfile": {"perPointMul":  0.5, "capMul": 2, "minExtra":  0, "maxExtra":  5},
 
     "targeting": "AOE_TIER",
     "rangeKind": "ALL",
@@ -25,6 +25,7 @@
     "power": 0,
     "trpCost": 1,
     "effects": ["bleed"],
+    "fields": ["healing_fog"],
     "description": "Generates a resilient field of energy around the user.",
     "flavorOnUse": "A resilient field of energy appeared!"
   }

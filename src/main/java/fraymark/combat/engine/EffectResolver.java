@@ -25,7 +25,7 @@ public class EffectResolver {
             switch (e.stacking()) {
                 case REFRESH_DURATION -> cur.setRemaining(Math.max(cur.remaining(), e.initialDuration()));
                 case STACK_ADD -> {
-                    // your accumulation policy — for now, refresh duration
+                    // your accumulation policy — for now, refresh duration TODO
                     cur.setRemaining(Math.max(cur.remaining(), e.initialDuration()));
                 }
                 case REPLACE_IF_STRONGER -> {
@@ -39,14 +39,13 @@ public class EffectResolver {
                 }
             }
             // Re-assert magnitude if desired on refresh
-            cur.effect().onApply(target);
             refreshRollRate(target);
             return;
         }
-
+        // brand new effect
         var inst = new EffectInstance(e, source);
         list.add(inst);
-        inst.apply(target);
+        inst.apply(target);   // applies magnitude once
         refreshRollRate(target);
     }
 

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "psi_storm",
+    "type": "SCHOOL_MODIFIER",
+    "name": "Psi Storm",
+    "description": "Psionic currents surge. Alpha weaves intensify; Beta weaves falter.",
+    "duration": 5,
+    "schoolMultipliers": {
+      "ALPHA": 1.25,
+      "BETA": 0.75
+    },
+    "boostedWeaves": {
+      "alpha_burst": 1.5
+    }
+  },
+  {
+    "id": "trp_suppression",
+    "type": "TRP_MODIFIER",
+    "name": "TRP Suppression Field",
+    "description": "Instability is dampened. TRP gain is halved.",
+    "trpGainMul": 0.5
+  },
+  {
+    "id": "healing_fog",
+    "type": "AURA",
+    "name": "Healing Fog",
+    "description": "A gentle fog restores vitality.",
+    "interval": 1,
+    "targets": "ALL_COMBATANTS",
+    "effectId": "shield"
+  }
+]

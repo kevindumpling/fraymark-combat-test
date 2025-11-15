@@ -119,12 +119,13 @@ public class BattleScreen extends BorderPane implements EventListener {
 
         Text info = new Text();
         info.textProperty().bind(
-                Bindings.format("%s (HP: %d/%d, TRP: %d, MG: %d%%)",
+                Bindings.format("%s (HP: %d/%d, TRP: %d, MG: %d%%, BARRIER: %.2f)",
                         vm.nameProperty(),
                         vm.hpProperty().asObject(),
                         vm.maxHpProperty().asObject(),
                         vm.trpProperty().asObject(),
-                        vm.mgProperty().asObject()
+                        vm.mgProperty().asObject(),
+                        vm.barrierProperty().asObject()
                 )
         );
 
